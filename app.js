@@ -1,7 +1,26 @@
 /* ===== Suivi Ongles – application ===== */
 'use strict';
 
-const API = 'https://script.google.com/macros/s/AKfycbyrfO8qeLNuiOOUDUlHbziIEhzVivegB1BpMvdEpH2aP2lnvZjbERy98P9gpIE8ztEnKQ/exec';
+/* Adresse du Google Sheet de la cliente : donnée une fois dans le lien (?api=…), puis mémorisée sur l'appareil. */
+const API_DEFAUT = 'https://script.google.com/macros/s/AKfycbyrfO8qeLNuiOOUDUlHbziIEhzVivegB1BpMvdEpH2aP2lnvZjbERy98P9gpIE8ztEnKQ/exec';
+const API_VALIDE = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]{20,}\/exec$/;
+const API = (function () {
+  let p = null;
+  try { p = new URLSearchParams(location.search).get('api'); } catch (e) { p = null; }
+  if (p && API_VALIDE.test(p)) {
+    try {
+      if (localStorage.getItem('api_suivi') !== p) { // autre salon : on repart de zéro sur cet appareil
+        ['pin_suivi', 'donnees_suivi', 'attente_suivi'].forEach(k => localStorage.removeItem(k));
+      }
+      localStorage.setItem('api_suivi', p);
+    } catch (e) { /* stockage indisponible */ }
+    history.replaceState(null, '', location.pathname);
+    return p;
+  }
+  let s = null;
+  try { s = localStorage.getItem('api_suivi'); } catch (e) { s = null; }
+  return s && API_VALIDE.test(s) ? s : API_DEFAUT;
+})();
 const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const GENERIQUES = ['cliente', 'client', 'accompagnant', 'accompagnante'];
 const ICONES_PAIEMENT = { 'Espèces': '💶', 'Carte': '💳', 'Wero': '📲', 'Chèque': '🧾', 'Virement': '🏦', 'Autre': '📱', 'Non renseigné': '❔' };
@@ -138,6 +157,7 @@ function charger() {
 
 let initFait = false;
 function init() {
+  if (D.reglages && D.reglages.nomSalon) { $('titre').textContent = '💅 ' + D.reglages.nomSalon; document.title = D.reglages.nomSalon; }
   $('sousTitre').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
   document.querySelectorAll('.debutOffre').forEach(s => s.textContent = D.debutOffre);
   if (!initFait) {
@@ -205,7 +225,7 @@ function nouvelleSaisie() {
 function infoCliente(c) {
   if (!c.total) return 'nouvelle cliente';
   const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
-  return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 && fideliteActive() ? ' · 🎁 −50 % cette fois !' : '');
+  return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 && fideliteActive() ? ' · 🎁 ' + RED() + ' cette fois !' : '');
 }
 
 function filtrerClientes() {
@@ -307,11 +327,11 @@ function majResume() {
   if (!cliente) f.classList.add('cache');
   else if (offre) {
     f.className = 'fidelite offre';
-    f.textContent = '🎁 ' + (cliente.depuis + 1) + 'e passage depuis le ' + D.debutOffre + ' : −50 % sur la prestation la plus chère !';
+    f.textContent = '🎁 ' + (cliente.depuis + 1) + 'e passage depuis le ' + D.debutOffre + ' : ' + RED() + ' sur la prestation la plus chère !';
   } else if (!GENERIQUES.includes(cliente.cle) && fideliteActive()) {
     const n = (cliente.depuis % D.passagesPourOffre) + 1, reste = D.passagesPourOffre - n;
     f.className = 'fidelite info';
-    f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant −50 %.';
+    f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant ' + RED() + '.';
   } else f.classList.add('cache');
 
   $('blocOffre').classList.toggle('cache', offre || !D.offres.some(o => o.active));
@@ -322,7 +342,7 @@ function majResume() {
   else a.classList.add('cache');
 
   let aPayer = prix;
-  if (offre && prix) aPayer = (!prixManuel && choisis.length > 1) ? prix - Math.max(...choisis.map(x => x.prix)) / 2 : prix / 2;
+  if (offre && prix) aPayer = Math.round(((!prixManuel && choisis.length > 1) ? prix - Math.max(...choisis.map(x => x.prix)) * TAUX() : prix * (1 - TAUX())) * 100) / 100;
   else if (offreChoisie && prix) aPayer = Math.max(Math.round((offreChoisie.type === '%' ? prix * (1 - offreChoisie.valeur / 100) : prix - offreChoisie.valeur) * 100) / 100, 0);
   $('encaisser').textContent = prix || choisis.length ? 'À encaisser : ' + euros(aPayer) + (offreChoisie && !offre ? '  (' + offreChoisie.nom + ')' : '') : '';
   return aPayer;
@@ -346,7 +366,7 @@ function enregistrer() {
     const r = j.resultat;
     majTout(r.data);
     afficherSucces('✅', 'Enregistré pour ' + p.client,
-      r.libelle === D.libelleFidelite ? '🎁 Passage fidélité : −50 % appliqué !'
+      r.libelle === D.libelleFidelite ? '🎁 Passage fidélité : ' + RED() + ' appliqué !'
         : r.libelle ? '🏷️ Offre appliquée : ' + r.libelle : (r.passage ? r.passage + 'e passage au total.' : ''),
       typeof r.aEncaisser === 'number' ? r.aEncaisser : aPayer);
   }).catch(e => {
@@ -367,6 +387,8 @@ function afficherSucces(icone, titre, detail, montant) {
 /* ======================= CLIENTES ======================= */
 let filtre = 'toutes';
 const dateNum = s => { const m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? new Date(+m[3], m[2] - 1, +m[1]).getTime() : 0; };
+const RED = () => '−' + ((D && D.reductionFidelite) || 50).toLocaleString('fr-FR') + ' %';
+const TAUX = () => ((D && D.reductionFidelite) || 50) / 100;
 const fideliteActive = () => !D.fidelite || D.fidelite.etat === 'active';
 const prochesOffre = c => fideliteActive() && c.depuis % D.passagesPourOffre === D.passagesPourOffre - 1;
 const absente = c => c.total > 0 && dateNum(c.derniere) && (Date.now() - dateNum(c.derniere)) > 60 * 864e5;
@@ -398,7 +420,7 @@ function afficherClientes() {
   liste.forEach(c => {
     const k = el('div', 'carte cliquable');
     const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', c.nom));
-    if (prochesOffre(c)) l1.appendChild(el('span', 'badge', '🎁 −50 % au prochain'));
+    if (prochesOffre(c)) l1.appendChild(el('span', 'badge', '🎁 ' + RED() + ' au prochain'));
     else l1.appendChild(el('span', 'chevron', '›'));
     k.appendChild(l1);
     const infos = [c.total + ' passage' + (c.total > 1 ? 's' : '')];
@@ -427,7 +449,7 @@ function ouvrirFiche(cle, rafraichissement) {
   const pts = $('fichePoints'); pts.replaceWith(Object.assign(pointsFidelite(c), { id: 'fichePoints' }));
   const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
   $('ficheFidelite').textContent = !fideliteActive() ? 'Offre fidélité ' + (D.fidelite.etat === 'pause' ? 'en pause' : 'arrêtée') + '.'
-    : reste === 1 ? '🎁 −50 % à sa prochaine visite !' : 'Encore ' + reste + ' passages avant −50 %.';
+    : reste === 1 ? '🎁 ' + RED() + ' à sa prochaine visite !' : 'Encore ' + reste + ' passages avant ' + RED() + '.';
   $('fichePassages').textContent = c.total;
   $('ficheCa').textContent = euros(c.ca);
   if (!rafraichissement) {
@@ -510,7 +532,7 @@ function carteSaisie(r, avecNom) {
   if (avecNom) det.push(r.date);
   if (r.heure) det.push(r.heure);
   det.push(r.prestation);
-  if (r.libelle) det.push(r.libelle === D.libelleFidelite ? '🎁 −50 %' : '🏷️ ' + r.libelle);
+  if (r.libelle) det.push(r.libelle === D.libelleFidelite ? '🎁 ' + RED() + '' : '🏷️ ' + r.libelle);
   if (r.paiement) det.push((ICONES_PAIEMENT[r.paiement] || '') + ' ' + r.paiement);
   k.appendChild(el('div', 'ligne2', det.join(' · ')));
   const b = el('button', 'lien', '✏️ Modifier');
@@ -546,7 +568,7 @@ function ouvrirModification(id) {
   s.value = actuelle ? 'o:' + actuelle.nom : (r.libelle && !r.fidelite ? 'l:' + r.libelle : '');
   $('mBlocOffre').classList.toggle('cache', r.fidelite || !r.apresDebut);
   const info = $('mInfo');
-  if (r.fidelite) { info.classList.remove('cache'); info.textContent = '🎁 Passage fidélité : le −50 % est appliqué automatiquement.'; }
+  if (r.fidelite) { info.classList.remove('cache'); info.textContent = '🎁 Passage fidélité : le ' + RED() + ' est appliqué automatiquement.'; }
   else if (!r.apresDebut) { info.classList.remove('cache'); info.textContent = 'Saisie d\'avant le ' + D.debutOffre + ' : l\'offre ne se change pas ici.'; }
   else info.classList.add('cache');
 
@@ -654,26 +676,26 @@ function afficherFidelite() {
   const z = $('carteFidelite'); z.innerHTML = '';
   const etat = D.fidelite ? D.fidelite.etat : 'active';
   if (etat === 'supprimee') {
-    const b = el('button', 'lien', '➕ Remettre l\'offre fidélité (−50 % au 6e passage)');
+    const b = el('button', 'lien', '➕ Remettre l\'offre fidélité (' + RED() + ' au ' + D.passagesPourOffre + 'e passage)');
     b.onclick = () => changerFidelite('active', '🎁 Offre fidélité remise en place.');
     z.appendChild(b);
     return;
   }
   const active = etat === 'active';
   const k = el('div', 'carte ' + (active ? 'offre-active' : 'offre-pause'));
-  const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🎁 Fidélité (automatique)')); l1.appendChild(el('span', '', '−50 %'));
+  const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🎁 Fidélité (automatique)')); l1.appendChild(el('span', '', RED()));
   k.appendChild(l1);
-  k.appendChild(el('div', 'ligne2', '−50 % sur la prestation la plus chère au 6e passage depuis le ' + D.debutOffre + ', puis au 12e, 18e…'));
-  k.appendChild(el('div', 'ligne2 etat', active ? '✅ Active : appliquée automatiquement' : '⏸ En pause : pas de −50 % sur les passages à partir de la pause'));
+  k.appendChild(el('div', 'ligne2', '' + RED() + ' sur la prestation la plus chère au ' + D.passagesPourOffre + 'e passage depuis le ' + D.debutOffre + ', puis au ' + 2 * D.passagesPourOffre + 'e, ' + 3 * D.passagesPourOffre + 'e…'));
+  k.appendChild(el('div', 'ligne2 etat', active ? '✅ Active : appliquée automatiquement' : '⏸ En pause : pas de ' + RED() + ' sur les passages à partir de la pause'));
   const act = el('div', 'actions');
   const bP = el('button', 'lien', active ? '⏸ Mettre en pause' : '▶ Réactiver');
   bP.onclick = () => {
-    if (active && !confirm('Mettre la fidélité en pause ?\n\nLes réductions déjà faites restent. Les passages à partir d\'aujourd\'hui ne donneront pas de −50 % tant qu\'elle est en pause.')) return;
+    if (active && !confirm('Mettre la fidélité en pause ?\n\nLes réductions déjà faites restent. Les passages à partir d\'aujourd\'hui ne donneront pas de ' + RED() + ' tant qu\'elle est en pause.')) return;
     changerFidelite(active ? 'pause' : 'active', active ? 'Fidélité mise en pause.' : '🎁 Fidélité réactivée.');
   };
   const bS = el('button', 'lien danger', '🗑 Supprimer');
   bS.onclick = () => {
-    if (confirm('Supprimer l\'offre fidélité ?\n\nLes réductions déjà faites restent, mais plus aucun −50 % ne sera appliqué à partir d\'aujourd\'hui. Tu pourras la remettre plus tard.')) {
+    if (confirm('Supprimer l\'offre fidélité ?\n\nLes réductions déjà faites restent, mais plus aucun ' + RED() + ' ne sera appliqué à partir d\'aujourd\'hui. Tu pourras la remettre plus tard.')) {
       changerFidelite('supprimee', 'Offre fidélité supprimée.');
     }
   };
@@ -709,7 +731,7 @@ function afficherOffres() {
     k.appendChild(l);
     sv.appendChild(k);
   };
-  bloc('🎁 −50 % à leur prochaine visite', D.clientes.filter(prochesOffre), c => c.nom);
+  bloc('🎁 ' + RED() + ' à leur prochaine visite', D.clientes.filter(prochesOffre), c => c.nom);
   bloc('🎂 Anniversaire ce mois-ci', D.clientes.filter(anniversaireCeMois), c => c.nom + ' (' + c.anniversaire + ')');
 }
 

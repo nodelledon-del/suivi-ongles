@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
-<header><div class="titre">💅 Suivi des prestations</div><div class="sous" id="sousTitre"></div></header>
+<header><div class="titre" id="titre">💅 Suivi des prestations</div><div class="sous" id="sousTitre"></div></header>
 <div id="bandeau" class="bandeau cache"></div>
 <main>
   <div id="chargement" class="chargement">Chargement…</div>
@@ -88,7 +88,7 @@
     <input type="text" id="rechercheClientes" placeholder="Rechercher…" oninput="afficherClientes()">
     <div class="filtres" id="filtres">
       <button class="puce on" data-f="toutes">Toutes</button>
-      <button class="puce" data-f="offre">🎁 −50 % au prochain</button>
+      <button class="puce" data-f="offre">🎁 Fidélité au prochain passage</button>
       <button class="puce" data-f="anniv">🎂 Anniversaire ce mois</button>
       <button class="puce" data-f="absente">💤 Pas venue depuis 2 mois</button>
       <button class="puce" data-f="regulieres">⭐ Fidèles (5 passages et +)</button>
@@ -100,7 +100,7 @@
         <option value="recente">Dernière visite (récente d'abord)</option>
         <option value="passages">Nombre de passages</option>
         <option value="ca">Chiffre d'affaires</option>
-        <option value="offre">Plus proche du −50 %</option>
+        <option value="offre">Plus proche de l'offre fidélité</option>
       </select>
     </div>
     <p id="nbClientes" class="discret"></p>
@@ -273,6 +273,6 @@
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
