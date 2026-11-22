@@ -433,6 +433,7 @@ function ouvrirFiche(cle, rafraichissement) {
   }
   majContact();
   $('ficheTel').oninput = majContact;
+  remplirFusion(c);
 
   const h = $('ficheHistorique'); h.innerHTML = '';
   const lignes = D.journal.filter(r => r.cle === cle).reverse();
@@ -459,6 +460,26 @@ function sauverFiche() {
     .then(j => { majTout(j.data); message('✅ Fiche de ' + c.nom + ' enregistrée.'); })
     .catch(e => erreur(e.horsLigne ? 'Pas d\'internet : réessaie quand le réseau revient.' : e))
     .finally(() => { $('btnFiche').disabled = false; });
+}
+
+function remplirFusion(c) {
+  $('ficheNomFusion').textContent = c.nom;
+  const s = $('ficheFusion'); s.innerHTML = '';
+  s.appendChild(new Option('Choisir l\'autre fiche…', ''));
+  D.clientes.filter(x => x.cle !== c.cle).forEach(x => s.appendChild(new Option(x.nom + ' (' + x.total + ' passage' + (x.total > 1 ? 's' : '') + ')', x.cle)));
+}
+
+function fusionnerFiche() {
+  const c = D.clientes.find(x => x.cle === ficheCle);
+  const autre = D.clientes.find(x => x.cle === $('ficheFusion').value);
+  if (!c || !autre) return message('👉 Choisis l\'autre fiche à regrouper.');
+  if (!confirm('Regrouper « ' + autre.nom + ' » (' + autre.total + ' passage' + (autre.total > 1 ? 's' : '') + ') dans « ' + c.nom + ' » ?\n\n' +
+    'Toutes ses saisies passeront au nom « ' + c.nom + ' » et la fiche « ' + autre.nom + ' » sera retirée.')) return;
+  $('btnFusion').disabled = true;
+  api('fusionner', { source: autre.nom, cible: c.nom })
+    .then(j => { majTout(j.data); ouvrirFiche(c.cle); message('✅ « ' + autre.nom + ' » regroupée dans « ' + c.nom + ' ».'); })
+    .catch(e => erreur(e.horsLigne ? 'Pas d\'internet : réessaie quand le réseau revient.' : e))
+    .finally(() => { $('btnFusion').disabled = false; });
 }
 
 function prestationPourFiche() {

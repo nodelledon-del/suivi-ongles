@@ -140,6 +140,13 @@
       <button class="gros secondaire" id="btnFiche" onclick="sauverFiche()">✔ Enregistrer la fiche</button>
     </div>
 
+    <h2>🔗 Même personne qu'une autre fiche ?</h2>
+    <div class="carte">
+      <p class="discret" style="margin-top:0">Ex. « Marlene » et « Marlène Dupont ». Les passages de l'autre fiche seront regroupés ici, sous le nom <b id="ficheNomFusion"></b>.</p>
+      <select id="ficheFusion"></select>
+      <button class="gros secondaire" id="btnFusion" onclick="fusionnerFiche()">🔗 Regrouper avec cette fiche</button>
+    </div>
+
     <h2>🕘 Historique</h2>
     <div id="ficheHistorique"></div>
   </section>
@@ -267,6 +274,6 @@
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
