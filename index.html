@@ -11,18 +11,20 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <header><div class="titre">💅 Suivi des prestations</div><div class="sous" id="sousTitre"></div></header>
+<div id="bandeau" class="bandeau cache"></div>
 <main>
   <div id="chargement" class="chargement">Chargement…</div>
 
+  <!-- ============ CODE PIN ============ -->
   <section id="v-pin" class="cache" style="text-align:center;padding-top:40px">
     <div style="font-size:56px">🔒</div>
-    <h2>Code d'accès</h2>
+    <h2 style="justify-content:center">Code d'accès</h2>
     <p style="color:var(--gris)">Demandé une seule fois sur cet appareil.</p>
-    <input type="password" id="pin" inputmode="numeric" maxlength="8" style="text-align:center;font-size:32px;letter-spacing:10px;max-width:240px"
+    <input type="password" id="pin" inputmode="numeric" maxlength="12" style="text-align:center;font-size:30px;letter-spacing:8px;max-width:260px"
            onkeydown="if(event.key==='Enter')validerPin()">
     <p id="pinMsg" style="color:var(--rose);font-weight:700"></p>
     <button class="gros" style="max-width:320px" onclick="validerPin()">Entrer</button>
@@ -43,10 +45,10 @@
 
       <h2><span class="etape">2</span>Prestation</h2>
       <div id="prestations" class="grille"></div>
-      <h2 style="font-size:17px;color:var(--gris)">+ Options</h2>
+      <h3 class="sous-titre">+ Options</h3>
       <div id="options" class="grille options"></div>
 
-      <h2><span class="etape">3</span>Prix</h2>
+      <h2><span class="etape">3</span>Prix et paiement</h2>
       <div class="total">
         <input type="number" id="prix" inputmode="decimal" placeholder="0" oninput="prixModifie()">
         <span style="font-size:22px">€</span>
@@ -54,11 +56,13 @@
       </div>
       <div id="fidelite" class="fidelite cache"></div>
       <div id="blocOffre">
-        <h2 style="font-size:17px;color:var(--gris)">🏷️ Offre (facultatif)</h2>
+        <h3 class="sous-titre">🏷️ Offre (facultatif)</h3>
         <div id="anniv" class="fidelite info cache"></div>
         <div id="choixOffres" class="grille options"></div>
       </div>
       <div id="encaisser" class="encaisser"></div>
+      <h3 class="sous-titre">💳 Payé comment ?</h3>
+      <div id="choixPaiement" class="paiements"></div>
 
       <h2><span class="etape">4</span>Quand ?</h2>
       <div class="quand">
@@ -70,9 +74,9 @@
     </div>
 
     <div id="succes" class="succes cache">
-      <div class="icone">✅</div>
-      <h2 id="succesTitre"></h2>
-      <p id="succesDetail" style="font-size:18px"></p>
+      <div class="icone" id="succesIcone">✅</div>
+      <h2 id="succesTitre" style="justify-content:center"></h2>
+      <p id="succesDetail" style="font-size:17px"></p>
       <div id="succesMontant" class="encaisser"></div>
       <button class="gros" onclick="nouvelleSaisie()">➕ Nouvelle prestation</button>
     </div>
@@ -99,22 +103,65 @@
         <option value="offre">Plus proche du −50 %</option>
       </select>
     </div>
-    <p id="nbClientes" style="color:var(--gris);font-size:15px"></p>
+    <p id="nbClientes" class="discret"></p>
     <div id="listeClientes"></div>
-    <p style="color:var(--gris);font-size:14px">Les ronds = passages depuis le <span class="debutOffre"></span>. Le 6e passage est à −50 %.</p>
+    <p class="discret">Touche une cliente pour voir sa fiche. Les ronds = passages depuis le <span class="debutOffre"></span>.</p>
   </section>
 
-  <!-- ============ OFFRES ============ -->
-  <section id="v-offres" class="cache">
-    <h2>Offres</h2>
-    <div class="carte" style="background:var(--vert-clair);border-color:var(--vert)">
+  <!-- ============ FICHE CLIENTE ============ -->
+  <section id="v-fiche" class="cache">
+    <button class="lien retour" onclick="vue('clientes')">← Toutes les clientes</button>
+    <div class="carte fiche-entete">
+      <div class="fiche-nom" id="ficheNom"></div>
+      <div class="ligne2" id="ficheSous"></div>
+      <div class="points" id="fichePoints"></div>
+      <div class="ligne2" id="ficheFidelite"></div>
+    </div>
+    <div class="stats">
+      <div class="stat">Passages<b id="fichePassages">0</b></div>
+      <div class="stat">Total dépensé<b id="ficheCa">0 €</b></div>
+    </div>
+    <button class="gros" onclick="prestationPourFiche()">➕ Nouvelle prestation pour <span id="ficheNomBouton"></span></button>
+
+    <h2>📇 Coordonnées et notes</h2>
+    <div class="carte">
+      <label class="etiquette" for="ficheTel">Téléphone</label>
+      <input type="tel" id="ficheTel" placeholder="06 12 34 56 78" inputmode="tel">
+      <div class="contact" id="ficheContact">
+        <a class="bouton-contact" id="ficheAppel" href="#">📞 Appeler</a>
+        <a class="bouton-contact" id="ficheSms" href="#">💬 SMS</a>
+      </div>
+      <label class="etiquette" for="ficheNomFamille">Nom de famille</label>
+      <input type="text" id="ficheNomFamille" placeholder="(facultatif)">
+      <label class="etiquette" for="ficheAnniv">Anniversaire (jour/mois)</label>
+      <input type="text" id="ficheAnniv" placeholder="ex. 09/04" inputmode="numeric" maxlength="10">
+      <label class="etiquette" for="ficheNotes">Notes</label>
+      <textarea id="ficheNotes" rows="4" placeholder="Couleurs préférées, allergies, forme d'ongles…"></textarea>
+      <button class="gros secondaire" id="btnFiche" onclick="sauverFiche()">✔ Enregistrer la fiche</button>
+    </div>
+
+    <h2>🕘 Historique</h2>
+    <div id="ficheHistorique"></div>
+  </section>
+
+  <!-- ============ TARIFS & OFFRES ============ -->
+  <section id="v-tarifs" class="cache">
+    <h2>💅 Prestations</h2>
+    <div id="tarifsPrestations"></div>
+    <button class="lien" onclick="ajouterLigneTarif(false)">➕ Ajouter une prestation</button>
+    <h2>✨ Options</h2>
+    <div id="tarifsOptions"></div>
+    <button class="lien" onclick="ajouterLigneTarif(true)">➕ Ajouter une option</button>
+    <button class="gros" id="btnTarifs" onclick="sauverTarifs()">✔ Enregistrer les tarifs</button>
+
+    <h2 style="margin-top:34px">🏷️ Offres</h2>
+    <div class="carte" style="background:var(--vert-clair)">
       <div class="ligne1"><span>🎁 Fidélité (automatique)</span><span class="badge">Toujours active</span></div>
       <div class="ligne2">−50 % sur la prestation la plus chère au 6e passage depuis le <span class="debutOffre"></span>, puis au 12e, 18e…</div>
     </div>
-    <p style="color:var(--gris);font-size:15px">Les offres ci-dessous se choisissent au moment de la saisie (étape 3).</p>
+    <p class="discret">Les offres ci-dessous se choisissent au moment de la saisie (étape 3).</p>
     <div id="listeOffres"></div>
-
-    <h2>➕ Créer une offre</h2>
+    <h3 class="sous-titre">➕ Créer une offre</h3>
     <div class="carte">
       <input type="text" id="offreNom" placeholder="Nom (ex. Parrainage, Fête des mères…)" maxlength="60">
       <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
@@ -124,9 +171,8 @@
           <button id="typeEur" class="puce" onclick="choisirType('€')">€</button>
         </div>
       </div>
-      <button class="gros" style="margin-top:14px" onclick="creerOffre()">Créer l'offre</button>
+      <button class="gros secondaire" onclick="creerOffre()">Créer l'offre</button>
     </div>
-
     <h2>👀 À surveiller</h2>
     <div id="surveiller"></div>
   </section>
@@ -134,7 +180,7 @@
   <!-- ============ ACHATS ============ -->
   <section id="v-achats" class="cache">
     <h2>🧾 Nouvel achat</h2>
-    <p style="color:var(--gris);font-size:15px;margin-top:-4px">Montants TTC (ce que tu as payé, TVA comprise).</p>
+    <p class="discret" style="margin-top:-4px">Montants TTC (ce que tu as payé, TVA comprise).</p>
     <div class="carte">
       <label class="etiquette" for="achatLibelle">C'est quoi ?</label>
       <input type="text" id="achatLibelle" placeholder="ex. Gel couleur rose, lampe UV…" maxlength="120">
@@ -154,7 +200,7 @@
     <h2>Achats de l'année</h2>
     <div class="trier"><label for="achatFiltre">Voir :</label>
       <select id="achatFiltre" onchange="afficherAchats()"></select></div>
-    <p id="achatsResume" style="color:var(--gris);font-size:15px"></p>
+    <p id="achatsResume" class="discret"></p>
     <div id="listeAchats"></div>
   </section>
 
@@ -171,6 +217,8 @@
       <div class="stat">Dépensé (TTC)<b id="anAchats">0 €</b></div>
     </div>
     <div class="stat vedette" style="margin-top:10px">Il reste (encaissé − dépensé)<b id="anReste">0 €</b></div>
+    <h2>💳 Encaissé par mode de paiement</h2>
+    <div id="paiements" class="carte"></div>
     <h2>Dépenses par catégorie</h2>
     <div id="categories" class="carte"></div>
     <h2 id="titreAnnee">Par mois</h2>
@@ -180,481 +228,45 @@
   </section>
 </main>
 
+<!-- ============ MODIFIER UNE SAISIE ============ -->
+<div id="modale" class="modale cache" onclick="if(event.target===this)fermerModale()">
+  <div class="feuille">
+    <div class="feuille-poignee"></div>
+    <h2 style="margin-top:4px">✏️ Modifier la saisie</h2>
+    <div class="quand">
+      <div><label class="etiquette" for="mDate">Date</label><input type="date" id="mDate"></div>
+      <div><label class="etiquette" for="mHeure">Heure</label><input type="time" id="mHeure"></div>
+    </div>
+    <label class="etiquette" for="mClient">Cliente</label>
+    <input type="text" id="mClient" list="listeNoms" autocomplete="off">
+    <label class="etiquette" for="mPrestation">Prestation</label>
+    <input type="text" id="mPrestation">
+    <label class="etiquette" for="mPrix">Prix (€, avant offre)</label>
+    <input type="number" id="mPrix" inputmode="decimal">
+    <label class="etiquette">Paiement</label>
+    <div id="mPaiement" class="paiements"></div>
+    <div id="mBlocOffre">
+      <label class="etiquette" for="mOffre">Offre</label>
+      <select id="mOffre"></select>
+    </div>
+    <div id="mInfo" class="fidelite info cache"></div>
+    <button class="gros" id="btnModifier" onclick="validerModification()">✔ Enregistrer les changements</button>
+    <div class="actions" style="justify-content:space-between;margin-top:14px">
+      <button class="lien" onclick="fermerModale()">Annuler</button>
+      <button class="lien danger" onclick="supprimerSaisie()">🗑 Supprimer cette saisie</button>
+    </div>
+  </div>
+</div>
+<datalist id="listeNoms"></datalist>
+
 <nav>
   <button id="t-nouvelle" onclick="vue('nouvelle')"><span>➕</span>Nouvelle</button>
   <button id="t-clientes" onclick="vue('clientes')"><span>👩</span>Clientes</button>
-  <button id="t-offres" onclick="vue('offres')"><span>🏷️</span>Offres</button>
+  <button id="t-tarifs" onclick="vue('tarifs')"><span>🏷️</span>Tarifs</button>
   <button id="t-achats" onclick="vue('achats')"><span>🧾</span>Achats</button>
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
-
-<script>
-  let D = null;                 // données du serveur
-  let cliente = null;           // {nom, depuis, total, nouvelle}
-  let choisis = [];             // prestations/options choisies [{nom, prix}]
-  let prixManuel = false;
-  const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-
-  const $ = id => document.getElementById(id);
-  const euros = v => (Math.round(v * 100) / 100).toLocaleString('fr-FR') + ' €';
-  const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
-  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
-
-  function message(t, ms) { const m = $('msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(m._t); m._t = setTimeout(() => m.style.display = 'none', ms || 3500); }
-  function erreur(e) { $('btnEnregistrer').disabled = false; message('⚠️ ' + (e && e.message ? e.message : e), 6000); }
-
-  /* ---------- Code PIN ---------- */
-  let PIN = '';
-  try { PIN = localStorage.getItem('pin_suivi') || ''; } catch (e) {}
-  const estErreurPin = e => (e && e.message ? e.message : String(e)).indexOf('PIN') >= 0;
-
-  function demanderPin(msg) {
-    $('chargement').classList.add('cache');
-    $('v-pin').classList.remove('cache');
-    $('pinMsg').textContent = msg || '';
-    $('pin').value = ''; $('pin').focus();
-  }
-  function validerPin() {
-    PIN = $('pin').value.trim();
-    $('v-pin').classList.add('cache'); $('chargement').classList.remove('cache');
-    charger();
-  }
-
-  /* ---------- Échange avec le Google Sheet ---------- */
-  const API = 'https://script.google.com/macros/s/AKfycbyrfO8qeLNuiOOUDUlHbziIEhzVivegB1BpMvdEpH2aP2lnvZjbERy98P9gpIE8ztEnKQ/exec';
-  async function api(action, extra) {
-    let r;
-    try {
-      r = await fetch(API, { method: 'POST', credentials: 'omit', body: JSON.stringify(Object.assign({ pin: PIN, action }, extra || {})) });
-    } catch (e) { throw new Error('Pas de connexion internet. Réessaie dans un instant.'); }
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.erreur);
-    return j;
-  }
-
-  function charger() {
-    if (!PIN) return demanderPin();
-    api('donnees').then(j => {
-      try { localStorage.setItem('pin_suivi', PIN); } catch (e) {}
-      D = j.data; $('chargement').classList.add('cache'); init();
-    }).catch(e => {
-      if (e.message === 'PIN') { try { localStorage.removeItem('pin_suivi'); } catch (x) {} return demanderPin('❌ Code incorrect, réessaie.'); }
-      if (/essais/.test(e.message)) return demanderPin('⛔ ' + e.message);
-      $('chargement').textContent = '⚠️ ' + e.message;
-    });
-  }
-
-  function init() {
-    $('sousTitre').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-    document.querySelectorAll('.debutOffre').forEach(s => s.textContent = D.debutOffre);
-    construirePrestations();
-    nouvelleSaisie();
-    afficherClientes();
-    afficherBilan();
-    afficherOffres();
-    initAchats();
-    document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => {
-      filtre = b.dataset.f;
-      document.querySelectorAll('#filtres .puce').forEach(x => x.classList.toggle('on', x === b));
-      afficherClientes();
-    });
-    vue('nouvelle');
-  }
-
-  /** Rafraîchit tous les écrans après une réponse du serveur. */
-  function majTout(d) { D = d; afficherClientes(); afficherBilan(); afficherOffres(); construireChoixOffres(); afficherAchats(); }
-
-  function vue(v) {
-    ['nouvelle', 'clientes', 'offres', 'achats', 'bilan'].forEach(x => {
-      $('v-' + x).classList.toggle('cache', x !== v);
-      $('t-' + x).classList.toggle('actif', x === v);
-    });
-    window.scrollTo(0, 0);
-  }
-
-  /* ---------- Saisie ---------- */
-  function maintenant() {
-    const d = new Date(), p = n => String(n).padStart(2, '0');
-    $('date').value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-    const m = Math.round(d.getMinutes() / 15) * 15;
-    const h = m === 60 ? d.getHours() + 1 : d.getHours();
-    $('heure').value = p(h % 24) + ':' + p(m % 60);
-  }
-
-  function nouvelleSaisie() {
-    cliente = null; choisis = []; prixManuel = false; offreChoisie = null;
-    construireChoixOffres();
-    $('recherche').value = ''; $('prix').value = '';
-    $('clienteChoisie').classList.add('cache'); $('clienteRecherche').classList.remove('cache');
-    $('formulaire').classList.remove('cache'); $('succes').classList.add('cache');
-    $('btnEnregistrer').disabled = false;
-    document.querySelectorAll('.presta').forEach(b => b.classList.remove('on'));
-    maintenant(); filtrerClientes(); majResume();
-    window.scrollTo(0, 0);
-  }
-
-  function infoCliente(c) {
-    if (!c.total) return 'nouvelle cliente';
-    const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
-    return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 ? ' · 🎁 −50 % cette fois !' : '');
-  }
-
-  function filtrerClientes() {
-    const q = norm($('recherche').value);
-    const box = $('suggestions'); box.innerHTML = '';
-    if (!q) {
-      const recents = [];
-      D.recentes.forEach(r => { const c = D.clientes.find(x => x.cle === norm(r.client)); if (c && !recents.includes(c)) recents.push(c); });
-      if (recents.length) box.appendChild(el('div', '', 'Clientes récentes :')).style.cssText = 'color:var(--gris);font-size:15px';
-      recents.slice(0, 5).forEach(c => box.appendChild(boutonCliente(c)));
-      return;
-    }
-    const res = D.clientes.filter(c => norm(c.nom).includes(q)).slice(0, 8);
-    res.forEach(c => box.appendChild(boutonCliente(c)));
-    if (!res.some(c => c.cle === q)) {
-      const nom = $('recherche').value.trim();
-      const b = el('button', 'choix nouvelle', '➕ Nouvelle cliente : ' + nom);
-      b.onclick = () => choisirCliente({ nom, cle: q, total: 0, depuis: 0, nouvelle: true });
-      box.appendChild(b);
-    }
-  }
-
-  function boutonCliente(c) {
-    const b = el('button', 'choix');
-    b.appendChild(el('span', '', c.nom));
-    b.appendChild(el('small', '', infoCliente(c)));
-    b.onclick = () => choisirCliente(c);
-    return b;
-  }
-
-  function choisirCliente(c) {
-    cliente = c;
-    $('clienteNom').textContent = c.nom;
-    $('clienteChoisie').classList.remove('cache'); $('clienteRecherche').classList.add('cache');
-    majResume();
-  }
-  function changerCliente() { cliente = null; $('clienteChoisie').classList.add('cache'); $('clienteRecherche').classList.remove('cache'); $('recherche').focus(); majResume(); }
-
-  function construirePrestations() {
-    const zP = $('prestations'), zO = $('options'); zP.innerHTML = ''; zO.innerHTML = '';
-    D.tarifs.forEach(t => {
-      const b = el('button', 'presta', t.nom);
-      b.appendChild(el('b', '', (t.option ? '+ ' : '') + euros(t.prix)));
-      b.onclick = () => {
-        const i = choisis.findIndex(x => x.nom === t.nom);
-        if (i >= 0) { choisis.splice(i, 1); b.classList.remove('on'); } else { choisis.push({ nom: t.nom, prix: t.prix }); b.classList.add('on'); }
-        if (!prixManuel) $('prix').value = choisis.length ? sommeChoisis() : '';
-        majResume();
-      };
-      (t.option ? zO : zP).appendChild(b);
-    });
-  }
-
-  const sommeChoisis = () => Math.round(choisis.reduce((s, x) => s + x.prix, 0) * 100) / 100;
-  function prixModifie() { prixManuel = true; $('prixAuto').classList.remove('cache'); majResume(); }
-  function remettrePrixAuto() { prixManuel = false; $('prixAuto').classList.add('cache'); $('prix').value = choisis.length ? sommeChoisis() : ''; majResume(); }
-
-  function offreProchaine() {
-    if (!cliente || !$('date').value || $('date').value < D.debutOffreIso) return false;
-    if (['cliente', 'client', 'accompagnant', 'accompagnante'].includes(cliente.cle)) return false;
-    return (cliente.depuis + 1) % D.passagesPourOffre === 0;
-  }
-
-  function majResume() {
-    const prix = Number(String($('prix').value).replace(',', '.')) || 0;
-    const offre = offreProchaine();
-    const f = $('fidelite');
-    if (!cliente) { f.classList.add('cache'); }
-    else if (offre) {
-      f.className = 'fidelite offre';
-      f.textContent = '🎁 ' + (cliente.depuis + 1) + 'e passage depuis le ' + D.debutOffre + ' : −50 % sur la prestation la plus chère !';
-    } else if (!['cliente', 'client', 'accompagnant', 'accompagnante'].includes(cliente.cle)) {
-      const n = (cliente.depuis % D.passagesPourOffre) + 1;
-      const reste = D.passagesPourOffre - n;
-      f.className = 'fidelite info';
-      f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant −50 %.';
-    } else { f.classList.add('cache'); }
-
-    // Offres manuelles : inutiles quand la fidélité s'applique déjà
-    $('blocOffre').classList.toggle('cache', offre || !D.offres.some(o => o.active));
-    if (offre) offreChoisie = null;
-    document.querySelectorAll('#choixOffres .presta').forEach(b => b.classList.toggle('on', !!offreChoisie && b.dataset.nom === offreChoisie.nom));
-    const a = $('anniv');
-    if (cliente && anniversaireCeMois(cliente)) { a.classList.remove('cache'); a.textContent = '🎂 C\'est le mois d\'anniversaire de ' + cliente.nom + ' (' + cliente.anniversaire + ').'; }
-    else a.classList.add('cache');
-
-    let aPayer = prix;
-    if (offre && prix) {
-      aPayer = (!prixManuel && choisis.length > 1) ? prix - Math.max(...choisis.map(x => x.prix)) / 2 : prix / 2;
-    } else if (offreChoisie && prix) {
-      aPayer = offreChoisie.type === '%' ? prix * (1 - offreChoisie.valeur / 100) : prix - offreChoisie.valeur;
-      aPayer = Math.max(Math.round(aPayer * 100) / 100, 0);
-    }
-    $('encaisser').textContent = prix || choisis.length
-      ? 'À encaisser : ' + euros(aPayer) + (offreChoisie && !offre ? '  (' + offreChoisie.nom + ')' : '') : '';
-  }
-
-  /* ---------- Offres à la saisie ---------- */
-  let offreChoisie = null;
-  const texteOffre = o => '−' + o.valeur.toLocaleString('fr-FR') + ' ' + o.type;
-  function construireChoixOffres() {
-    const z = $('choixOffres'); z.innerHTML = '';
-    D.offres.filter(o => o.active).forEach(o => {
-      const b = el('button', 'presta', o.nom); b.dataset.nom = o.nom;
-      b.appendChild(el('b', '', texteOffre(o)));
-      b.onclick = () => { offreChoisie = offreChoisie && offreChoisie.nom === o.nom ? null : o; majResume(); };
-      z.appendChild(b);
-    });
-  }
-
-  function anniversaireCeMois(c) {
-    const m = String(c.anniversaire || '').match(/^\s*\d{1,2}\/(\d{1,2})/);
-    return !!m && Number(m[1]) === new Date().getMonth() + 1;
-  }
-
-  function enregistrer() {
-    if (!cliente) return message('👉 Choisis d\'abord la cliente (étape 1).');
-    if (!choisis.length) return message('👉 Choisis au moins une prestation (étape 2).');
-    if ($('prix').value === '') return message('👉 Indique le prix (étape 3).');
-    $('btnEnregistrer').disabled = true;
-    $('btnEnregistrer').textContent = 'Enregistrement…';
-    const p = {
-      date: $('date').value, heure: $('heure').value, client: cliente.nom, items: choisis,
-      prixManuel: prixManuel ? Number(String($('prix').value).replace(',', '.')) : null,
-      offre: !offreProchaine() && offreChoisie ? offreChoisie : null,
-    };
-    api('ajouter', { p }).then(j => {
-      const r = j.resultat;
-      $('btnEnregistrer').textContent = '✔ Enregistrer';
-      majTout(r.data);
-      $('formulaire').classList.add('cache'); $('succes').classList.remove('cache');
-      $('succesTitre').textContent = 'Enregistré pour ' + r.client;
-      $('succesDetail').textContent = r.libelle === '-50 %' ? '🎁 Passage fidélité : −50 % appliqué !'
-        : r.libelle ? '🏷️ Offre appliquée : ' + r.libelle : (r.passage ? r.passage + 'e passage au total.' : '');
-      $('succesMontant').textContent = typeof r.aEncaisser === 'number' ? 'À encaisser : ' + euros(r.aEncaisser) : '';
-      window.scrollTo(0, 0);
-    }).catch(e => { $('btnEnregistrer').textContent = '✔ Enregistrer'; erreur(e); });
-  }
-
-  /* ---------- Clientes ---------- */
-  let filtre = 'toutes';
-  const dateNum = s => { const m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? new Date(+m[3], m[2] - 1, +m[1]).getTime() : 0; };
-  const prochesOffre = c => c.depuis % D.passagesPourOffre === D.passagesPourOffre - 1;
-  const absente = c => c.total > 0 && dateNum(c.derniere) && (Date.now() - dateNum(c.derniere)) > 60 * 864e5;
-
-  function afficherClientes() {
-    const q = norm($('rechercheClientes').value);
-    const box = $('listeClientes'); box.innerHTML = '';
-    let liste = D.clientes.filter(c => !q || norm(c.nom).includes(q));
-    if (filtre === 'offre') liste = liste.filter(prochesOffre);
-    if (filtre === 'anniv') liste = liste.filter(anniversaireCeMois);
-    if (filtre === 'absente') liste = liste.filter(absente);
-    if (filtre === 'regulieres') liste = liste.filter(c => c.total >= 5);
-    const tri = $('tri').value;
-    const parNom = (a, b) => a.nom.localeCompare(b.nom, 'fr');
-    liste.sort({
-      nom: parNom,
-      recente: (a, b) => dateNum(b.derniere) - dateNum(a.derniere) || parNom(a, b),
-      passages: (a, b) => b.total - a.total || parNom(a, b),
-      ca: (a, b) => b.ca - a.ca || parNom(a, b),
-      offre: (a, b) => (b.depuis % D.passagesPourOffre) - (a.depuis % D.passagesPourOffre) || parNom(a, b),
-    }[tri]);
-    $('nbClientes').textContent = liste.length + ' cliente' + (liste.length > 1 ? 's' : '');
-    if (!liste.length) box.appendChild(el('p', '', 'Aucune cliente ne correspond.')).style.color = 'var(--gris)';
-    liste.forEach(c => {
-      const k = el('div', 'carte');
-      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', c.nom));
-      const n = c.depuis % D.passagesPourOffre;
-      if (n === D.passagesPourOffre - 1) l1.appendChild(el('span', 'badge', '🎁 −50 % au prochain'));
-      k.appendChild(l1);
-      const infos = [c.total + ' passage' + (c.total > 1 ? 's' : '') + ' au total'];
-      if (c.derniere) infos.push('dernière visite ' + c.derniere);
-      if (c.anniversaire) infos.push('🎂 ' + c.anniversaire);
-      if (c.ca) infos.push(euros(c.ca));
-      k.appendChild(el('div', 'ligne2', infos.join(' · ')));
-      const pts = el('div', 'points');
-      for (let i = 1; i <= D.passagesPourOffre; i++) pts.appendChild(el('i', i <= n ? 'plein' : (i === D.passagesPourOffre ? 'cadeau' : '')));
-      k.appendChild(pts);
-      box.appendChild(k);
-    });
-  }
-
-  /* ---------- Bilan ---------- */
-  function afficherBilan() {
-    $('jourNb').textContent = D.jour.nb; $('jourCa').textContent = euros(D.jour.ca);
-    $('titreAnnee').textContent = 'Mois par mois (' + D.annee + ')';
-    $('titreBilanAnnee').textContent = 'Bilan ' + D.annee;
-    const tb = $('tableMois'); tb.innerHTML = '';
-    let tc = 0, ta = 0;
-    const cellule = (v, cls) => { const td = el('td', 'n' + (cls ? ' ' + cls : ''), euros(v)); return td; };
-    D.mois.forEach((m, i) => {
-      const dep = D.achatsMois[i] || 0;
-      if (!m.nb && !dep) return; tc += m.ca; ta += dep;
-      const tr = el('tr'); tr.appendChild(el('td', '', MOIS[i]));
-      tr.appendChild(cellule(m.ca)); tr.appendChild(cellule(dep)); tr.appendChild(cellule(m.ca - dep, m.ca - dep < 0 ? 'negatif' : ''));
-      tb.appendChild(tr);
-    });
-    const tr = el('tr'); tr.className = 'total-ligne';
-    tr.appendChild(el('td', '', 'Total')); tr.appendChild(cellule(tc)); tr.appendChild(cellule(ta)); tr.appendChild(cellule(tc - ta, tc - ta < 0 ? 'negatif' : ''));
-    tb.appendChild(tr);
-    $('anCa').textContent = euros(tc); $('anAchats').textContent = euros(ta); $('anReste').textContent = euros(tc - ta);
-    $('anReste').classList.toggle('negatif', tc - ta < 0);
-
-    const cz = $('categories'); cz.innerHTML = '';
-    const cats = Object.keys(D.parCategorie).sort((a, b) => D.parCategorie[b] - D.parCategorie[a]);
-    const max = cats.length ? D.parCategorie[cats[0]] : 0;
-    if (!cats.length) cz.appendChild(el('div', 'ligne2', 'Aucun achat enregistré cette année. Ajoute-les dans l\'onglet 🧾 Achats.'));
-    cats.forEach(c => {
-      const v = D.parCategorie[c];
-      const k = el('div', 'cat');
-      const l = el('div', 'ligne1'); l.appendChild(el('span', '', c)); l.appendChild(el('span', '', euros(v) + ' · ' + Math.round(v / ta * 100) + ' %'));
-      k.appendChild(l);
-      const b = el('div', 'barre'); b.style.width = Math.max(4, v / max * 100) + '%'; k.appendChild(b);
-      cz.appendChild(k);
-    });
-
-    const box = $('recentes'); box.innerHTML = '';
-    D.recentes.forEach((r, i) => {
-      const k = el('div', 'carte');
-      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', r.client));
-      l1.appendChild(el('span', '', r.caApres !== null ? euros(r.caApres) : r.prix)); k.appendChild(l1);
-      k.appendChild(el('div', 'ligne2', r.date + (r.heure ? ' · ' + r.heure : '') + ' · ' + r.prestation + (r.libelle ? ' · ' + (r.libelle === '-50 %' ? '🎁 −50 %' : '🏷️ ' + r.libelle) : '')));
-      if (i === 0 && r.row === D.derniereLigne) {
-        const b = el('button', 'lien', '↩ Annuler cette saisie');
-        b.onclick = () => {
-          if (!confirm('Supprimer la saisie de ' + r.client + ' du ' + r.date + ' ?')) return;
-          api('annuler', { row: r.row }).then(j => { majTout(j.data); filtrerClientes(); message('Saisie annulée.'); })
-            .catch(erreur);
-        };
-        k.appendChild(b);
-      }
-      box.appendChild(k);
-    });
-  }
-
-  /* ---------- Achats ---------- */
-  let categorieAchat = null;
-  const ICONES_CAT = { 'Produits & consommables': '💅', 'Matériel & équipement': '🔌', 'Hygiène & désinfection': '🧴', 'Formation': '🎓',
-    'Publicité & communication': '📣', 'Local & loyer': '🏠', 'Déplacements': '🚗', 'Assurance & banque': '🏦', 'URSSAF & cotisations': '🏛️', 'Autre': '📦' };
-  const iconeCat = c => (ICONES_CAT[c] || '📦');
-
-  function initAchats() {
-    const z = $('achatCategories'); z.innerHTML = '';
-    D.categoriesAchats.forEach(c => {
-      const b = el('button', 'presta', iconeCat(c) + ' ' + c); b.dataset.cat = c;
-      b.onclick = () => { categorieAchat = c; document.querySelectorAll('#achatCategories .presta').forEach(x => x.classList.toggle('on', x === b)); };
-      z.appendChild(b);
-    });
-    const f = $('achatFiltre'); f.innerHTML = '';
-    f.appendChild(new Option('Toutes les catégories', ''));
-    D.categoriesAchats.forEach(c => f.appendChild(new Option(iconeCat(c) + ' ' + c, c)));
-    resetAchat();
-    afficherAchats();
-  }
-
-  function resetAchat() {
-    $('achatLibelle').value = ''; $('achatPrix').value = ''; $('achatQte').value = 1;
-    const d = new Date(), p = n => String(n).padStart(2, '0');
-    $('achatDate').value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-    categorieAchat = null; document.querySelectorAll('#achatCategories .presta').forEach(x => x.classList.remove('on'));
-    majTotalAchat();
-  }
-
-  function majTotalAchat() {
-    const pu = Number(String($('achatPrix').value).replace(',', '.')) || 0;
-    const q = Number($('achatQte').value) || 1;
-    $('achatTotal').textContent = pu ? 'Total : ' + euros(pu * q) + (q > 1 ? '  (' + q + ' × ' + euros(pu) + ')' : '') : '';
-  }
-
-  function enregistrerAchat() {
-    const libelle = $('achatLibelle').value.trim();
-    const pu = Number(String($('achatPrix').value).replace(',', '.'));
-    const q = Number($('achatQte').value) || 1;
-    if (!libelle) return message('👉 Indique ce que tu as acheté.');
-    if (!categorieAchat) return message('👉 Choisis une catégorie.');
-    if (!(pu > 0)) return message('👉 Indique le prix TTC.');
-    $('btnAchat').disabled = true; $('btnAchat').textContent = 'Enregistrement…';
-    api('achat_ajouter', { a: { date: $('achatDate').value, libelle, categorie: categorieAchat, prixUnitaire: pu, quantite: q } })
-      .then(j => { majTout(j.data); resetAchat(); message('✅ Achat enregistré : ' + libelle + ' (' + euros(pu * q) + ')'); })
-      .catch(erreur)
-      .finally(() => { $('btnAchat').disabled = false; $('btnAchat').textContent = '✔ Enregistrer l\'achat'; });
-  }
-
-  function afficherAchats() {
-    const f = $('achatFiltre').value;
-    const liste = D.achats.filter(a => !f || a.categorie === f);
-    const total = liste.reduce((s, a) => s + a.total, 0);
-    $('achatsResume').textContent = liste.length + ' achat' + (liste.length > 1 ? 's' : '') + ' · ' + euros(total) + ' TTC';
-    const box = $('listeAchats'); box.innerHTML = '';
-    if (!liste.length) box.appendChild(el('p', '', 'Aucun achat pour l\'instant.')).style.color = 'var(--gris)';
-    liste.forEach(a => {
-      const k = el('div', 'carte');
-      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', iconeCat(a.categorie) + ' ' + a.libelle)); l1.appendChild(el('span', '', euros(a.total)));
-      k.appendChild(l1);
-      k.appendChild(el('div', 'ligne2', a.date + ' · ' + a.categorie + (a.q > 1 ? ' · ' + a.q + ' × ' + euros(a.pu) : '')));
-      const b = el('button', 'lien', '🗑 Supprimer');
-      b.onclick = () => {
-        if (!confirm('Supprimer l\'achat « ' + a.libelle + ' » (' + euros(a.total) + ') ?')) return;
-        api('achat_supprimer', { row: a.row }).then(j => { majTout(j.data); message('Achat supprimé.'); }).catch(erreur);
-      };
-      k.appendChild(b);
-      box.appendChild(k);
-    });
-  }
-
-  /* ---------- Offres ---------- */
-  let typeOffre = '%';
-  function choisirType(t) { typeOffre = t; $('typePct').classList.toggle('on', t === '%'); $('typeEur').classList.toggle('on', t === '€'); }
-
-  function sauverOffres(liste, msg) {
-    api('offres', { offres: liste }).then(j => { majTout(j.data); message(msg); }).catch(erreur);
-  }
-
-  function creerOffre() {
-    const nom = $('offreNom').value.trim();
-    const valeur = Number(String($('offreValeur').value).replace(',', '.'));
-    if (!nom) return message('👉 Donne un nom à l\'offre.');
-    if (!(valeur > 0)) return message('👉 Indique le montant de la réduction.');
-    if (typeOffre === '%' && valeur > 100) return message('👉 Le pourcentage ne peut pas dépasser 100.');
-    if (D.offres.some(o => norm(o.nom) === norm(nom))) return message('👉 Une offre porte déjà ce nom.');
-    const liste = D.offres.concat([{ nom, type: typeOffre, valeur, active: true }]);
-    $('offreNom').value = ''; $('offreValeur').value = '';
-    sauverOffres(liste, '✅ Offre « ' + nom + ' » créée.');
-  }
-
-  function afficherOffres() {
-    const box = $('listeOffres'); box.innerHTML = '';
-    if (!D.offres.length) box.appendChild(el('p', '', 'Aucune offre pour l\'instant.')).style.color = 'var(--gris)';
-    D.offres.forEach((o, i) => {
-      const k = el('div', 'carte' + (o.active ? '' : ' inactive'));
-      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🏷️ ' + o.nom)); l1.appendChild(el('span', '', texteOffre(o)));
-      k.appendChild(l1);
-      k.appendChild(el('div', 'ligne2', o.active ? 'Active : proposée à la saisie' : 'En pause : non proposée'));
-      const act = el('div', 'actions');
-      const bP = el('button', 'lien', o.active ? '⏸ Mettre en pause' : '▶ Réactiver');
-      bP.onclick = () => sauverOffres(D.offres.map((x, j) => j === i ? Object.assign({}, x, { active: !x.active }) : x),
-        o.active ? 'Offre mise en pause.' : 'Offre réactivée.');
-      const bS = el('button', 'lien', '🗑 Supprimer');
-      bS.onclick = () => { if (confirm('Supprimer l\'offre « ' + o.nom + ' » ?')) sauverOffres(D.offres.filter((x, j) => j !== i), 'Offre supprimée.'); };
-      act.appendChild(bP); act.appendChild(bS); k.appendChild(act);
-      box.appendChild(k);
-    });
-
-    const sv = $('surveiller'); sv.innerHTML = '';
-    const proches = D.clientes.filter(prochesOffre);
-    const annivs = D.clientes.filter(anniversaireCeMois);
-    const bloc = (titre, liste, detail) => {
-      const k = el('div', 'carte');
-      k.appendChild(el('div', 'ligne1', titre + ' (' + liste.length + ')'));
-      k.appendChild(el('div', 'ligne2', liste.length ? liste.map(detail).join(' · ') : 'Personne pour l\'instant.'));
-      sv.appendChild(k);
-    };
-    bloc('🎁 −50 % à leur prochaine visite', proches, c => c.nom);
-    bloc('🎂 Anniversaire ce mois-ci', annivs, c => c.nom + ' (' + c.anniversaire + ')');
-  }
-
-  charger();
-</script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
