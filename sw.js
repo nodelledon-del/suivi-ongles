@@ -1,7 +1,7 @@
 /* Service worker : permet d'ouvrir l'application sans internet.
    Les pages viennent du réseau en priorité ; la copie gardée sert seulement hors connexion. */
-const CACHE = 'suivi-ongles-v4';
-const FICHIERS = ['./', './index.html', './app.js?v=4', './style.css?v=4', './manifest.json'];
+const CACHE = 'suivi-ongles-v5';
+const FICHIERS = ['./', './index.html', './app.js?v=4', './style.css?v=5', './manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));

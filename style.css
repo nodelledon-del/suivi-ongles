@@ -50,7 +50,7 @@ h2 { font-size: 18px; font-weight: 600; margin: 24px 0 10px; display: flex; alig
 }
 
 /* Champs */
-input[type=text], input[type=number], input[type=date], input[type=time], input[type=password], select {
+input[type=text], input[type=number], input[type=date], input[type=time], input[type=password], input[type=tel], select {
   width: 100%; font-size: 18px; padding: 14px 16px; border: 2px solid var(--bord); border-radius: 14px; background: #fff;
   color: var(--texte); font-family: inherit; transition: border-color .15s, box-shadow .15s;
 }
