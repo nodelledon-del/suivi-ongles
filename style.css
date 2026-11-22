@@ -237,3 +237,10 @@ textarea:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 4px
 }
 .liens-clientes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .liens-clientes .puce { box-shadow: none; background: var(--rose-clair); }
+
+/* Offres : vert = active, blanc = en pause */
+.carte.offre-active { background: var(--vert-clair); box-shadow: inset 4px 0 0 var(--vert), var(--ombre); }
+.carte.offre-pause { background: #fff; }
+.carte.offre-pause .ligne1 { color: var(--gris); }
+.ligne2.etat { font-weight: 700; }
+.offre-active .ligne2.etat { color: var(--vert); }

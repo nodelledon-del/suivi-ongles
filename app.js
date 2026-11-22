@@ -205,7 +205,7 @@ function nouvelleSaisie() {
 function infoCliente(c) {
   if (!c.total) return 'nouvelle cliente';
   const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
-  return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 ? ' · 🎁 −50 % cette fois !' : '');
+  return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 && fideliteActive() ? ' · 🎁 −50 % cette fois !' : '');
 }
 
 function filtrerClientes() {
@@ -280,6 +280,7 @@ function remettrePrixAuto() { prixManuel = false; $('prixAuto').classList.add('c
 function offreProchaine() {
   if (!cliente || !$('date').value || $('date').value < D.debutOffreIso) return false;
   if (GENERIQUES.includes(cliente.cle)) return false;
+  if (!fideliteActive()) return false;
   return (cliente.depuis + 1) % D.passagesPourOffre === 0;
 }
 
@@ -307,7 +308,7 @@ function majResume() {
   else if (offre) {
     f.className = 'fidelite offre';
     f.textContent = '🎁 ' + (cliente.depuis + 1) + 'e passage depuis le ' + D.debutOffre + ' : −50 % sur la prestation la plus chère !';
-  } else if (!GENERIQUES.includes(cliente.cle)) {
+  } else if (!GENERIQUES.includes(cliente.cle) && fideliteActive()) {
     const n = (cliente.depuis % D.passagesPourOffre) + 1, reste = D.passagesPourOffre - n;
     f.className = 'fidelite info';
     f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant −50 %.';
@@ -366,7 +367,8 @@ function afficherSucces(icone, titre, detail, montant) {
 /* ======================= CLIENTES ======================= */
 let filtre = 'toutes';
 const dateNum = s => { const m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? new Date(+m[3], m[2] - 1, +m[1]).getTime() : 0; };
-const prochesOffre = c => c.depuis % D.passagesPourOffre === D.passagesPourOffre - 1;
+const fideliteActive = () => !D.fidelite || D.fidelite.etat === 'active';
+const prochesOffre = c => fideliteActive() && c.depuis % D.passagesPourOffre === D.passagesPourOffre - 1;
 const absente = c => c.total > 0 && dateNum(c.derniere) && (Date.now() - dateNum(c.derniere)) > 60 * 864e5;
 
 function pointsFidelite(c) {
@@ -424,10 +426,12 @@ function ouvrirFiche(cle, rafraichissement) {
     .filter(Boolean).join(' · ');
   const pts = $('fichePoints'); pts.replaceWith(Object.assign(pointsFidelite(c), { id: 'fichePoints' }));
   const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
-  $('ficheFidelite').textContent = reste === 1 ? '🎁 −50 % à sa prochaine visite !' : 'Encore ' + reste + ' passages avant −50 %.';
+  $('ficheFidelite').textContent = !fideliteActive() ? 'Offre fidélité ' + (D.fidelite.etat === 'pause' ? 'en pause' : 'arrêtée') + '.'
+    : reste === 1 ? '🎁 −50 % à sa prochaine visite !' : 'Encore ' + reste + ' passages avant −50 %.';
   $('fichePassages').textContent = c.total;
   $('ficheCa').textContent = euros(c.ca);
   if (!rafraichissement) {
+    $('fichePrenom').value = c.nom;
     $('ficheTel').value = c.tel || ''; $('ficheNomFamille').value = c.nomFamille || '';
     $('ficheAnniv').value = c.anniversaire || ''; $('ficheNotes').value = c.notes || '';
   }
@@ -455,9 +459,17 @@ function sauverFiche() {
   if (!c) return;
   const anniv = $('ficheAnniv').value.trim();
   if (anniv && !/^\d{1,2}\/\d{1,2}(\/\d{2,4})?$/.test(anniv)) return message('👉 Anniversaire au format jour/mois, ex. 09/04.');
+  const prenom = $('fichePrenom').value.trim();
+  if (!prenom) return message('👉 Le prénom ne peut pas être vide.');
+  const renomme = prenom !== c.nom;
+  if (renomme && !confirm('Renommer « ' + c.nom + ' » en « ' + prenom + ' » ?\n\nToutes ses saisies passeront à ce nouveau nom.')) return;
   $('btnFiche').disabled = true;
-  api('cliente', { c: { cle: c.cle, nom: c.nom, tel: $('ficheTel').value, nomFamille: $('ficheNomFamille').value, anniversaire: anniv, notes: $('ficheNotes').value } })
-    .then(j => { majTout(j.data); message('✅ Fiche de ' + c.nom + ' enregistrée.'); })
+  api('cliente', { c: { cle: c.cle, nom: c.nom, nouveauNom: renomme ? prenom : '', tel: $('ficheTel').value, nomFamille: $('ficheNomFamille').value, anniversaire: anniv, notes: $('ficheNotes').value } })
+    .then(j => {
+      if (renomme) ficheCle = norm(prenom);
+      majTout(j.data); ouvrirFiche(ficheCle);
+      message('✅ Fiche de ' + prenom + ' enregistrée.');
+    })
     .catch(e => erreur(e.horsLigne ? 'Pas d\'internet : réessaie quand le réseau revient.' : e))
     .finally(() => { $('btnFiche').disabled = false; });
 }
@@ -633,11 +645,48 @@ function creerOffre() {
   sauverOffres(D.offres.concat([{ nom, type: typeOffre, valeur, active: true }]), '✅ Offre « ' + nom + ' » créée.');
 }
 
+function changerFidelite(etat, msg) {
+  api('fidelite', { etat }).then(j => { majTout(j.data); message(msg); })
+    .catch(e => erreur(e.horsLigne ? 'Pas d\'internet : réessaie quand le réseau revient.' : e));
+}
+
+function afficherFidelite() {
+  const z = $('carteFidelite'); z.innerHTML = '';
+  const etat = D.fidelite ? D.fidelite.etat : 'active';
+  if (etat === 'supprimee') {
+    const b = el('button', 'lien', '➕ Remettre l\'offre fidélité (−50 % au 6e passage)');
+    b.onclick = () => changerFidelite('active', '🎁 Offre fidélité remise en place.');
+    z.appendChild(b);
+    return;
+  }
+  const active = etat === 'active';
+  const k = el('div', 'carte ' + (active ? 'offre-active' : 'offre-pause'));
+  const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🎁 Fidélité (automatique)')); l1.appendChild(el('span', '', '−50 %'));
+  k.appendChild(l1);
+  k.appendChild(el('div', 'ligne2', '−50 % sur la prestation la plus chère au 6e passage depuis le ' + D.debutOffre + ', puis au 12e, 18e…'));
+  k.appendChild(el('div', 'ligne2 etat', active ? '✅ Active : appliquée automatiquement' : '⏸ En pause : pas de −50 % sur les passages à partir de la pause'));
+  const act = el('div', 'actions');
+  const bP = el('button', 'lien', active ? '⏸ Mettre en pause' : '▶ Réactiver');
+  bP.onclick = () => {
+    if (active && !confirm('Mettre la fidélité en pause ?\n\nLes réductions déjà faites restent. Les passages à partir d\'aujourd\'hui ne donneront pas de −50 % tant qu\'elle est en pause.')) return;
+    changerFidelite(active ? 'pause' : 'active', active ? 'Fidélité mise en pause.' : '🎁 Fidélité réactivée.');
+  };
+  const bS = el('button', 'lien danger', '🗑 Supprimer');
+  bS.onclick = () => {
+    if (confirm('Supprimer l\'offre fidélité ?\n\nLes réductions déjà faites restent, mais plus aucun −50 % ne sera appliqué à partir d\'aujourd\'hui. Tu pourras la remettre plus tard.')) {
+      changerFidelite('supprimee', 'Offre fidélité supprimée.');
+    }
+  };
+  act.appendChild(bP); act.appendChild(bS); k.appendChild(act);
+  z.appendChild(k);
+}
+
 function afficherOffres() {
+  afficherFidelite();
   const box = $('listeOffres'); box.innerHTML = '';
-  if (!D.offres.length) box.appendChild(el('p', 'discret', 'Aucune offre pour l\'instant.'));
+  if (!D.offres.length) box.appendChild(el('p', 'discret', 'Aucune autre offre pour l\'instant.'));
   D.offres.forEach((o, i) => {
-    const k = el('div', 'carte' + (o.active ? '' : ' inactive'));
+    const k = el('div', 'carte ' + (o.active ? 'offre-active' : 'offre-pause'));
     const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🏷️ ' + o.nom)); l1.appendChild(el('span', '', texteOffre(o)));
     k.appendChild(l1);
     k.appendChild(el('div', 'ligne2', o.active ? 'Active : proposée à la saisie' : 'En pause : non proposée'));

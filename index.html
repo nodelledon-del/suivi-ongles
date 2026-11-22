@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <header><div class="titre">💅 Suivi des prestations</div><div class="sous" id="sousTitre"></div></header>
@@ -125,6 +125,8 @@
 
     <h2>📇 Coordonnées et notes</h2>
     <div class="carte">
+      <label class="etiquette" for="fichePrenom">Prénom (nom affiché)</label>
+      <input type="text" id="fichePrenom" maxlength="60">
       <label class="etiquette" for="ficheTel">Téléphone</label>
       <input type="tel" id="ficheTel" placeholder="06 12 34 56 78" inputmode="tel">
       <div class="contact" id="ficheContact">
@@ -162,11 +164,8 @@
     <button class="gros" id="btnTarifs" onclick="sauverTarifs()">✔ Enregistrer les tarifs</button>
 
     <h2 style="margin-top:34px">🏷️ Offres</h2>
-    <div class="carte" style="background:var(--vert-clair)">
-      <div class="ligne1"><span>🎁 Fidélité (automatique)</span><span class="badge">Toujours active</span></div>
-      <div class="ligne2">−50 % sur la prestation la plus chère au 6e passage depuis le <span class="debutOffre"></span>, puis au 12e, 18e…</div>
-    </div>
-    <p class="discret">Les offres ci-dessous se choisissent au moment de la saisie (étape 3).</p>
+    <div id="carteFidelite"></div>
+    <p class="discret">Les autres offres se choisissent au moment de la saisie (étape 3). En vert : active · en blanc : en pause.</p>
     <div id="listeOffres"></div>
     <h3 class="sous-titre">➕ Créer une offre</h3>
     <div class="carte">
@@ -274,6 +273,6 @@
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
