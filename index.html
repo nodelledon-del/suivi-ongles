@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Suivi Ongles</title>
+<meta name="theme-color" content="#d6336c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Suivi Ongles">
+<link rel="manifest" href="manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  :root {
+    --rose: #d6336c; --rose-clair: #fde8ef; --vert: #2b8a3e; --vert-clair: #e6f6ea;
+    --gris: #6b6b6b; --fond: #faf7f8; --carte: #ffffff; --bord: #ead9df; --texte: #222;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--fond);
+         color: var(--texte); font-size: 18px; padding-bottom: 90px; }
+  header { background: var(--rose); color: #fff; padding: 14px 16px; font-size: 22px; font-weight: 700; }
+  main { padding: 12px 16px; max-width: 640px; margin: 0 auto; }
+  h2 { font-size: 20px; margin: 22px 0 10px; }
+  .etape { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--rose); color: #fff;
+           align-items: center; justify-content: center; font-size: 16px; margin-right: 8px; }
+  input[type=text], input[type=number], input[type=date], input[type=time] {
+    width: 100%; font-size: 20px; padding: 14px; border: 2px solid var(--bord); border-radius: 12px; background: #fff; }
+  input:focus { outline: none; border-color: var(--rose); }
+  .liste { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .choix { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px; border-radius: 12px;
+           border: 2px solid var(--bord); background: var(--carte); font-size: 18px; cursor: pointer; text-align: left; width: 100%; }
+  .choix small { color: var(--gris); font-size: 14px; }
+  .choix.nouvelle { border-style: dashed; color: var(--rose); font-weight: 600; }
+  .selection { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 12px;
+               background: var(--rose-clair); border: 2px solid var(--rose); font-size: 20px; font-weight: 700; }
+  .lien { background: none; border: none; color: var(--rose); font-size: 16px; text-decoration: underline; cursor: pointer; padding: 6px; }
+  .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .presta { padding: 14px 10px; border-radius: 12px; border: 2px solid var(--bord); background: #fff; font-size: 16px;
+            cursor: pointer; min-height: 64px; }
+  .presta b { display: block; font-size: 15px; color: var(--gris); margin-top: 4px; font-weight: 500; }
+  .presta.on { background: var(--rose); border-color: var(--rose); color: #fff; }
+  .presta.on b { color: #fff; }
+  .options .presta { min-height: 50px; background: #fff8fb; }
+  .fidelite { padding: 14px; border-radius: 12px; font-size: 18px; margin-top: 14px; }
+  .fidelite.offre { background: var(--vert-clair); border: 2px solid var(--vert); color: var(--vert); font-weight: 700; }
+  .fidelite.info { background: #f3f0f1; color: #444; }
+  .total { display: flex; align-items: center; gap: 10px; }
+  .total input { max-width: 160px; font-weight: 700; }
+  .encaisser { font-size: 26px; font-weight: 800; margin-top: 10px; }
+  .gros { width: 100%; padding: 20px; font-size: 22px; font-weight: 700; border: none; border-radius: 14px; background: var(--rose);
+          color: #fff; margin-top: 22px; cursor: pointer; }
+  .gros:disabled { background: #c9a9b6; }
+  .gros.secondaire { background: #fff; color: var(--rose); border: 2px solid var(--rose); }
+  .quand { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid var(--bord);
+        padding-bottom: env(safe-area-inset-bottom); }
+  nav button { flex: 1; padding: 12px 4px 14px; border: none; background: none; font-size: 15px; color: var(--gris); cursor: pointer; }
+  nav button span { display: block; font-size: 26px; }
+  nav button.actif { color: var(--rose); font-weight: 700; }
+  .carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+  .carte .ligne1 { display: flex; justify-content: space-between; font-weight: 700; }
+  .carte .ligne2 { color: var(--gris); font-size: 15px; margin-top: 4px; }
+  .badge { display: inline-block; background: var(--vert); color: #fff; border-radius: 8px; padding: 2px 8px; font-size: 14px; }
+  .points { display: flex; gap: 6px; margin-top: 8px; }
+  .points i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--rose); }
+  .points i.plein { background: var(--rose); }
+  .points i.cadeau { border-color: var(--vert); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: #fff; border: 1px solid var(--bord); border-radius: 12px; padding: 14px; }
+  .stat b { display: block; font-size: 26px; color: var(--rose); }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; }
+  td, th { padding: 10px; border-bottom: 1px solid var(--bord); text-align: left; font-size: 16px; }
+  td.n, th.n { text-align: right; }
+  .msg { position: fixed; left: 16px; right: 16px; bottom: 100px; background: #222; color: #fff; padding: 16px; border-radius: 12px;
+         font-size: 17px; display: none; z-index: 10; }
+  .chargement { text-align: center; color: var(--gris); padding: 60px 0; }
+  .succes { text-align: center; padding: 30px 10px; }
+  .succes .icone { font-size: 64px; }
+  .cache { display: none !important; }
+</style>
+</head>
+<body>
+<header>💅 Suivi des prestations</header>
+<main>
+  <div id="chargement" class="chargement">Chargement…</div>
+
+  <section id="v-pin" class="cache" style="text-align:center;padding-top:40px">
+    <div style="font-size:56px">🔒</div>
+    <h2>Code d'accès</h2>
+    <p style="color:var(--gris)">Demandé une seule fois sur cet appareil.</p>
+    <input type="password" id="pin" inputmode="numeric" maxlength="8" style="text-align:center;font-size:32px;letter-spacing:10px;max-width:240px"
+           onkeydown="if(event.key==='Enter')validerPin()">
+    <p id="pinMsg" style="color:var(--rose);font-weight:700"></p>
+    <button class="gros" style="max-width:320px" onclick="validerPin()">Entrer</button>
+  </section>
+
+  <!-- ============ NOUVELLE PRESTATION ============ -->
+  <section id="v-nouvelle" class="cache">
+    <div id="formulaire">
+      <h2><span class="etape">1</span>Cliente</h2>
+      <div id="clienteChoisie" class="selection cache">
+        <span id="clienteNom"></span>
+        <button class="lien" onclick="changerCliente()">Changer</button>
+      </div>
+      <div id="clienteRecherche">
+        <input type="text" id="recherche" placeholder="Tape le prénom…" autocomplete="off" oninput="filtrerClientes()">
+        <div id="suggestions" class="liste"></div>
+      </div>
+
+      <h2><span class="etape">2</span>Prestation</h2>
+      <div id="prestations" class="grille"></div>
+      <h2 style="font-size:17px;color:var(--gris)">+ Options</h2>
+      <div id="options" class="grille options"></div>
+
+      <h2><span class="etape">3</span>Prix</h2>
+      <div class="total">
+        <input type="number" id="prix" inputmode="decimal" placeholder="0" oninput="prixModifie()">
+        <span style="font-size:22px">€</span>
+        <button class="lien cache" id="prixAuto" onclick="remettrePrixAuto()">Prix automatique</button>
+      </div>
+      <div id="fidelite" class="fidelite cache"></div>
+      <div id="encaisser" class="encaisser"></div>
+
+      <h2><span class="etape">4</span>Quand ?</h2>
+      <div class="quand">
+        <input type="date" id="date" onchange="majResume()">
+        <input type="time" id="heure">
+      </div>
+
+      <button class="gros" id="btnEnregistrer" onclick="enregistrer()">✔ Enregistrer</button>
+    </div>
+
+    <div id="succes" class="succes cache">
+      <div class="icone">✅</div>
+      <h2 id="succesTitre"></h2>
+      <p id="succesDetail" style="font-size:18px"></p>
+      <div id="succesMontant" class="encaisser"></div>
+      <button class="gros" onclick="nouvelleSaisie()">➕ Nouvelle prestation</button>
+    </div>
+  </section>
+
+  <!-- ============ CLIENTES ============ -->
+  <section id="v-clientes" class="cache">
+    <h2>Clientes</h2>
+    <input type="text" id="rechercheClientes" placeholder="Rechercher…" oninput="afficherClientes()">
+    <p style="color:var(--gris);font-size:15px">Les ronds = passages depuis le <span class="debutOffre"></span>. Le 6e passage est à −50 %.</p>
+    <div id="listeClientes"></div>
+  </section>
+
+  <!-- ============ BILAN ============ -->
+  <section id="v-bilan" class="cache">
+    <h2>Aujourd'hui</h2>
+    <div class="stats">
+      <div class="stat">Prestations<b id="jourNb">0</b></div>
+      <div class="stat">Encaissé<b id="jourCa">0 €</b></div>
+    </div>
+    <h2 id="titreAnnee">Par mois</h2>
+    <table><thead><tr><th>Mois</th><th class="n">Prestations</th><th class="n">CA</th></tr></thead><tbody id="tableMois"></tbody></table>
+    <h2>Dernières saisies</h2>
+    <div id="recentes"></div>
+  </section>
+</main>
+
+<nav>
+  <button id="t-nouvelle" onclick="vue('nouvelle')"><span>➕</span>Nouvelle</button>
+  <button id="t-clientes" onclick="vue('clientes')"><span>👩</span>Clientes</button>
+  <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
+</nav>
+<div id="msg" class="msg"></div>
+
+<script>
+  let D = null;                 // données du serveur
+  let cliente = null;           // {nom, depuis, total, nouvelle}
+  let choisis = [];             // prestations/options choisies [{nom, prix}]
+  let prixManuel = false;
+  const MOIS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  const $ = id => document.getElementById(id);
+  const euros = v => (Math.round(v * 100) / 100).toLocaleString('fr-FR') + ' €';
+  const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/\s+/g, ' ');
+  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
+
+  function message(t, ms) { const m = $('msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(m._t); m._t = setTimeout(() => m.style.display = 'none', ms || 3500); }
+  function erreur(e) { $('btnEnregistrer').disabled = false; message('⚠️ ' + (e && e.message ? e.message : e), 6000); }
+
+  /* ---------- Code PIN ---------- */
+  let PIN = '';
+  try { PIN = localStorage.getItem('pin_suivi') || ''; } catch (e) {}
+  const estErreurPin = e => (e && e.message ? e.message : String(e)).indexOf('PIN') >= 0;
+
+  function demanderPin(msg) {
+    $('chargement').classList.add('cache');
+    $('v-pin').classList.remove('cache');
+    $('pinMsg').textContent = msg || '';
+    $('pin').value = ''; $('pin').focus();
+  }
+  function validerPin() {
+    PIN = $('pin').value.trim();
+    $('v-pin').classList.add('cache'); $('chargement').classList.remove('cache');
+    charger();
+  }
+
+  /* ---------- Échange avec le Google Sheet ---------- */
+  const API = 'https://script.google.com/macros/s/AKfycbyrfO8qeLNuiOOUDUlHbziIEhzVivegB1BpMvdEpH2aP2lnvZjbERy98P9gpIE8ztEnKQ/exec';
+  async function api(action, extra) {
+    let r;
+    try {
+      r = await fetch(API, { method: 'POST', credentials: 'omit', body: JSON.stringify(Object.assign({ pin: PIN, action }, extra || {})) });
+    } catch (e) { throw new Error('Pas de connexion internet. Réessaie dans un instant.'); }
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.erreur);
+    return j;
+  }
+
+  function charger() {
+    if (!PIN) return demanderPin();
+    api('donnees').then(j => {
+      try { localStorage.setItem('pin_suivi', PIN); } catch (e) {}
+      D = j.data; $('chargement').classList.add('cache'); init();
+    }).catch(e => {
+      if (e.message === 'PIN') { try { localStorage.removeItem('pin_suivi'); } catch (x) {} return demanderPin('❌ Code incorrect, réessaie.'); }
+      if (/essais/.test(e.message)) return demanderPin('⛔ ' + e.message);
+      $('chargement').textContent = '⚠️ ' + e.message;
+    });
+  }
+
+  function init() {
+    document.querySelectorAll('.debutOffre').forEach(s => s.textContent = D.debutOffre);
+    construirePrestations();
+    nouvelleSaisie();
+    afficherClientes();
+    afficherBilan();
+    vue('nouvelle');
+  }
+
+  function vue(v) {
+    ['nouvelle', 'clientes', 'bilan'].forEach(x => {
+      $('v-' + x).classList.toggle('cache', x !== v);
+      $('t-' + x).classList.toggle('actif', x === v);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Saisie ---------- */
+  function maintenant() {
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    $('date').value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    const m = Math.round(d.getMinutes() / 15) * 15;
+    const h = m === 60 ? d.getHours() + 1 : d.getHours();
+    $('heure').value = p(h % 24) + ':' + p(m % 60);
+  }
+
+  function nouvelleSaisie() {
+    cliente = null; choisis = []; prixManuel = false;
+    $('recherche').value = ''; $('prix').value = '';
+    $('clienteChoisie').classList.add('cache'); $('clienteRecherche').classList.remove('cache');
+    $('formulaire').classList.remove('cache'); $('succes').classList.add('cache');
+    $('btnEnregistrer').disabled = false;
+    document.querySelectorAll('.presta').forEach(b => b.classList.remove('on'));
+    maintenant(); filtrerClientes(); majResume();
+    window.scrollTo(0, 0);
+  }
+
+  function infoCliente(c) {
+    if (!c.total) return 'nouvelle cliente';
+    const reste = D.passagesPourOffre - (c.depuis % D.passagesPourOffre);
+    return c.total + ' passage' + (c.total > 1 ? 's' : '') + (reste === 1 ? ' · 🎁 −50 % cette fois !' : '');
+  }
+
+  function filtrerClientes() {
+    const q = norm($('recherche').value);
+    const box = $('suggestions'); box.innerHTML = '';
+    if (!q) {
+      const recents = [];
+      D.recentes.forEach(r => { const c = D.clientes.find(x => x.cle === norm(r.client)); if (c && !recents.includes(c)) recents.push(c); });
+      if (recents.length) box.appendChild(el('div', '', 'Clientes récentes :')).style.cssText = 'color:var(--gris);font-size:15px';
+      recents.slice(0, 5).forEach(c => box.appendChild(boutonCliente(c)));
+      return;
+    }
+    const res = D.clientes.filter(c => norm(c.nom).includes(q)).slice(0, 8);
+    res.forEach(c => box.appendChild(boutonCliente(c)));
+    if (!res.some(c => c.cle === q)) {
+      const nom = $('recherche').value.trim();
+      const b = el('button', 'choix nouvelle', '➕ Nouvelle cliente : ' + nom);
+      b.onclick = () => choisirCliente({ nom, cle: q, total: 0, depuis: 0, nouvelle: true });
+      box.appendChild(b);
+    }
+  }
+
+  function boutonCliente(c) {
+    const b = el('button', 'choix');
+    b.appendChild(el('span', '', c.nom));
+    b.appendChild(el('small', '', infoCliente(c)));
+    b.onclick = () => choisirCliente(c);
+    return b;
+  }
+
+  function choisirCliente(c) {
+    cliente = c;
+    $('clienteNom').textContent = c.nom;
+    $('clienteChoisie').classList.remove('cache'); $('clienteRecherche').classList.add('cache');
+    majResume();
+  }
+  function changerCliente() { cliente = null; $('clienteChoisie').classList.add('cache'); $('clienteRecherche').classList.remove('cache'); $('recherche').focus(); majResume(); }
+
+  function construirePrestations() {
+    const zP = $('prestations'), zO = $('options'); zP.innerHTML = ''; zO.innerHTML = '';
+    D.tarifs.forEach(t => {
+      const b = el('button', 'presta', t.nom);
+      b.appendChild(el('b', '', (t.option ? '+ ' : '') + euros(t.prix)));
+      b.onclick = () => {
+        const i = choisis.findIndex(x => x.nom === t.nom);
+        if (i >= 0) { choisis.splice(i, 1); b.classList.remove('on'); } else { choisis.push({ nom: t.nom, prix: t.prix }); b.classList.add('on'); }
+        if (!prixManuel) $('prix').value = choisis.length ? sommeChoisis() : '';
+        majResume();
+      };
+      (t.option ? zO : zP).appendChild(b);
+    });
+  }
+
+  const sommeChoisis = () => Math.round(choisis.reduce((s, x) => s + x.prix, 0) * 100) / 100;
+  function prixModifie() { prixManuel = true; $('prixAuto').classList.remove('cache'); majResume(); }
+  function remettrePrixAuto() { prixManuel = false; $('prixAuto').classList.add('cache'); $('prix').value = choisis.length ? sommeChoisis() : ''; majResume(); }
+
+  function offreProchaine() {
+    if (!cliente || !$('date').value || $('date').value < D.debutOffreIso) return false;
+    if (['cliente', 'client', 'accompagnant', 'accompagnante'].includes(cliente.cle)) return false;
+    return (cliente.depuis + 1) % D.passagesPourOffre === 0;
+  }
+
+  function majResume() {
+    const prix = Number(String($('prix').value).replace(',', '.')) || 0;
+    const offre = offreProchaine();
+    const f = $('fidelite');
+    if (!cliente) { f.classList.add('cache'); }
+    else if (offre) {
+      f.className = 'fidelite offre';
+      f.textContent = '🎁 ' + (cliente.depuis + 1) + 'e passage depuis le ' + D.debutOffre + ' : −50 % sur la prestation la plus chère !';
+    } else if (!['cliente', 'client', 'accompagnant', 'accompagnante'].includes(cliente.cle)) {
+      const n = (cliente.depuis % D.passagesPourOffre) + 1;
+      const reste = D.passagesPourOffre - n;
+      f.className = 'fidelite info';
+      f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant −50 %.';
+    } else { f.classList.add('cache'); }
+
+    let aPayer = prix;
+    if (offre && prix) {
+      aPayer = (!prixManuel && choisis.length > 1) ? prix - Math.max(...choisis.map(x => x.prix)) / 2 : prix / 2;
+    }
+    $('encaisser').textContent = prix || choisis.length ? 'À encaisser : ' + euros(aPayer) : '';
+  }
+
+  function enregistrer() {
+    if (!cliente) return message('👉 Choisis d\'abord la cliente (étape 1).');
+    if (!choisis.length) return message('👉 Choisis au moins une prestation (étape 2).');
+    if ($('prix').value === '') return message('👉 Indique le prix (étape 3).');
+    $('btnEnregistrer').disabled = true;
+    $('btnEnregistrer').textContent = 'Enregistrement…';
+    const p = {
+      date: $('date').value, heure: $('heure').value, client: cliente.nom, items: choisis,
+      prixManuel: prixManuel ? Number(String($('prix').value).replace(',', '.')) : null,
+    };
+    api('ajouter', { p }).then(j => {
+      const r = j.resultat;
+      $('btnEnregistrer').textContent = '✔ Enregistrer';
+      D = r.data; afficherClientes(); afficherBilan();
+      $('formulaire').classList.add('cache'); $('succes').classList.remove('cache');
+      $('succesTitre').textContent = 'Enregistré pour ' + r.client;
+      $('succesDetail').textContent = r.offre ? '🎁 Passage fidélité : −50 % appliqué !' : (r.passage ? r.passage + 'e passage au total.' : '');
+      $('succesMontant').textContent = typeof r.aEncaisser === 'number' ? 'À encaisser : ' + euros(r.aEncaisser) : '';
+      window.scrollTo(0, 0);
+    }).catch(e => { $('btnEnregistrer').textContent = '✔ Enregistrer'; erreur(e); });
+  }
+
+  /* ---------- Clientes ---------- */
+  function afficherClientes() {
+    const q = norm($('rechercheClientes').value);
+    const box = $('listeClientes'); box.innerHTML = '';
+    D.clientes.filter(c => !q || norm(c.nom).includes(q)).forEach(c => {
+      const k = el('div', 'carte');
+      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', c.nom));
+      const n = c.depuis % D.passagesPourOffre;
+      if (n === D.passagesPourOffre - 1) l1.appendChild(el('span', 'badge', '🎁 −50 % au prochain'));
+      k.appendChild(l1);
+      const infos = [c.total + ' passage' + (c.total > 1 ? 's' : '') + ' au total'];
+      if (c.derniere) infos.push('dernière visite ' + c.derniere);
+      if (c.anniversaire) infos.push('🎂 ' + c.anniversaire);
+      k.appendChild(el('div', 'ligne2', infos.join(' · ')));
+      const pts = el('div', 'points');
+      for (let i = 1; i <= D.passagesPourOffre; i++) pts.appendChild(el('i', i <= n ? 'plein' : (i === D.passagesPourOffre ? 'cadeau' : '')));
+      k.appendChild(pts);
+      box.appendChild(k);
+    });
+  }
+
+  /* ---------- Bilan ---------- */
+  function afficherBilan() {
+    $('jourNb').textContent = D.jour.nb; $('jourCa').textContent = euros(D.jour.ca);
+    $('titreAnnee').textContent = 'Par mois (' + D.annee + ')';
+    const tb = $('tableMois'); tb.innerHTML = '';
+    let tn = 0, tc = 0;
+    D.mois.forEach((m, i) => {
+      if (!m.nb) return; tn += m.nb; tc += m.ca;
+      const tr = el('tr'); tr.appendChild(el('td', '', MOIS[i])); tr.appendChild(el('td', 'n', m.nb)); tr.appendChild(el('td', 'n', euros(m.ca))); tb.appendChild(tr);
+    });
+    const tr = el('tr'); tr.style.fontWeight = '700';
+    tr.appendChild(el('td', '', 'Total')); tr.appendChild(el('td', 'n', tn)); tr.appendChild(el('td', 'n', euros(tc))); tb.appendChild(tr);
+
+    const box = $('recentes'); box.innerHTML = '';
+    D.recentes.forEach((r, i) => {
+      const k = el('div', 'carte');
+      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', r.client));
+      l1.appendChild(el('span', '', r.caApres !== null ? euros(r.caApres) : r.prix)); k.appendChild(l1);
+      k.appendChild(el('div', 'ligne2', r.date + (r.heure ? ' · ' + r.heure : '') + ' · ' + r.prestation + (r.offre ? ' · 🎁 −50 %' : '')));
+      if (i === 0 && r.row === D.derniereLigne) {
+        const b = el('button', 'lien', '↩ Annuler cette saisie');
+        b.onclick = () => {
+          if (!confirm('Supprimer la saisie de ' + r.client + ' du ' + r.date + ' ?')) return;
+          api('annuler', { row: r.row }).then(j => { D = j.data; afficherClientes(); afficherBilan(); filtrerClientes(); message('Saisie annulée.'); })
+            .catch(erreur);
+        };
+        k.appendChild(b);
+      }
+      box.appendChild(k);
+    });
+  }
+
+  charger();
+</script>
+</body>
+</html>

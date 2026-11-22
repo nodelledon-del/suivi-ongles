@@ -1,0 +1,8 @@
+{
+  "name": "Suivi Ongles",
+  "short_name": "Suivi Ongles",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#faf7f8",
+  "theme_color": "#d6336c"
+}
