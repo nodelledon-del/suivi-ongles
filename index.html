@@ -75,6 +75,15 @@
   .succes { text-align: center; padding: 30px 10px; }
   .succes .icone { font-size: 64px; }
   .cache { display: none !important; }
+  .filtres { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px; -webkit-overflow-scrolling: touch; }
+  .puce { flex: 0 0 auto; padding: 10px 14px; border-radius: 999px; border: 2px solid var(--bord); background: #fff;
+          font-size: 15px; cursor: pointer; white-space: nowrap; color: var(--texte); }
+  .puce.on { background: var(--rose); border-color: var(--rose); color: #fff; }
+  .trier { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 16px; }
+  .trier select { flex: 1; font-size: 16px; padding: 10px; border: 2px solid var(--bord); border-radius: 10px; background: #fff; }
+  .bascule { display: flex; gap: 6px; }
+  .actions { display: flex; gap: 14px; margin-top: 8px; }
+  .inactive { opacity: .55; }
 </style>
 </head>
 <body>
@@ -117,6 +126,11 @@
         <button class="lien cache" id="prixAuto" onclick="remettrePrixAuto()">Prix automatique</button>
       </div>
       <div id="fidelite" class="fidelite cache"></div>
+      <div id="blocOffre">
+        <h2 style="font-size:17px;color:var(--gris)">🏷️ Offre (facultatif)</h2>
+        <div id="anniv" class="fidelite info cache"></div>
+        <div id="choixOffres" class="grille options"></div>
+      </div>
       <div id="encaisser" class="encaisser"></div>
 
       <h2><span class="etape">4</span>Quand ?</h2>
@@ -141,8 +155,53 @@
   <section id="v-clientes" class="cache">
     <h2>Clientes</h2>
     <input type="text" id="rechercheClientes" placeholder="Rechercher…" oninput="afficherClientes()">
-    <p style="color:var(--gris);font-size:15px">Les ronds = passages depuis le <span class="debutOffre"></span>. Le 6e passage est à −50 %.</p>
+    <div class="filtres" id="filtres">
+      <button class="puce on" data-f="toutes">Toutes</button>
+      <button class="puce" data-f="offre">🎁 −50 % au prochain</button>
+      <button class="puce" data-f="anniv">🎂 Anniversaire ce mois</button>
+      <button class="puce" data-f="absente">💤 Pas venue depuis 2 mois</button>
+      <button class="puce" data-f="regulieres">⭐ Fidèles (5 passages et +)</button>
+    </div>
+    <div class="trier">
+      <label for="tri">Trier par :</label>
+      <select id="tri" onchange="afficherClientes()">
+        <option value="nom">Nom (A → Z)</option>
+        <option value="recente">Dernière visite (récente d'abord)</option>
+        <option value="passages">Nombre de passages</option>
+        <option value="ca">Chiffre d'affaires</option>
+        <option value="offre">Plus proche du −50 %</option>
+      </select>
+    </div>
+    <p id="nbClientes" style="color:var(--gris);font-size:15px"></p>
     <div id="listeClientes"></div>
+    <p style="color:var(--gris);font-size:14px">Les ronds = passages depuis le <span class="debutOffre"></span>. Le 6e passage est à −50 %.</p>
+  </section>
+
+  <!-- ============ OFFRES ============ -->
+  <section id="v-offres" class="cache">
+    <h2>Offres</h2>
+    <div class="carte" style="background:var(--vert-clair);border-color:var(--vert)">
+      <div class="ligne1"><span>🎁 Fidélité (automatique)</span><span class="badge">Toujours active</span></div>
+      <div class="ligne2">−50 % sur la prestation la plus chère au 6e passage depuis le <span class="debutOffre"></span>, puis au 12e, 18e…</div>
+    </div>
+    <p style="color:var(--gris);font-size:15px">Les offres ci-dessous se choisissent au moment de la saisie (étape 3).</p>
+    <div id="listeOffres"></div>
+
+    <h2>➕ Créer une offre</h2>
+    <div class="carte">
+      <input type="text" id="offreNom" placeholder="Nom (ex. Parrainage, Fête des mères…)" maxlength="60">
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <input type="number" id="offreValeur" inputmode="decimal" placeholder="10" style="max-width:120px">
+        <div class="bascule">
+          <button id="typePct" class="puce on" onclick="choisirType('%')">%</button>
+          <button id="typeEur" class="puce" onclick="choisirType('€')">€</button>
+        </div>
+      </div>
+      <button class="gros" style="margin-top:14px" onclick="creerOffre()">Créer l'offre</button>
+    </div>
+
+    <h2>👀 À surveiller</h2>
+    <div id="surveiller"></div>
   </section>
 
   <!-- ============ BILAN ============ -->
@@ -162,6 +221,7 @@
 <nav>
   <button id="t-nouvelle" onclick="vue('nouvelle')"><span>➕</span>Nouvelle</button>
   <button id="t-clientes" onclick="vue('clientes')"><span>👩</span>Clientes</button>
+  <button id="t-offres" onclick="vue('offres')"><span>🏷️</span>Offres</button>
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
@@ -228,11 +288,20 @@
     nouvelleSaisie();
     afficherClientes();
     afficherBilan();
+    afficherOffres();
+    document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => {
+      filtre = b.dataset.f;
+      document.querySelectorAll('#filtres .puce').forEach(x => x.classList.toggle('on', x === b));
+      afficherClientes();
+    });
     vue('nouvelle');
   }
 
+  /** Rafraîchit tous les écrans après une réponse du serveur. */
+  function majTout(d) { D = d; afficherClientes(); afficherBilan(); afficherOffres(); construireChoixOffres(); }
+
   function vue(v) {
-    ['nouvelle', 'clientes', 'bilan'].forEach(x => {
+    ['nouvelle', 'clientes', 'offres', 'bilan'].forEach(x => {
       $('v-' + x).classList.toggle('cache', x !== v);
       $('t-' + x).classList.toggle('actif', x === v);
     });
@@ -249,7 +318,8 @@
   }
 
   function nouvelleSaisie() {
-    cliente = null; choisis = []; prixManuel = false;
+    cliente = null; choisis = []; prixManuel = false; offreChoisie = null;
+    construireChoixOffres();
     $('recherche').value = ''; $('prix').value = '';
     $('clienteChoisie').classList.add('cache'); $('clienteRecherche').classList.remove('cache');
     $('formulaire').classList.remove('cache'); $('succes').classList.add('cache');
@@ -341,11 +411,41 @@
       f.textContent = 'Fidélité : ' + n + '/' + D.passagesPourOffre + ' — encore ' + reste + ' passage' + (reste > 1 ? 's' : '') + ' avant −50 %.';
     } else { f.classList.add('cache'); }
 
+    // Offres manuelles : inutiles quand la fidélité s'applique déjà
+    $('blocOffre').classList.toggle('cache', offre || !D.offres.some(o => o.active));
+    if (offre) offreChoisie = null;
+    document.querySelectorAll('#choixOffres .presta').forEach(b => b.classList.toggle('on', !!offreChoisie && b.dataset.nom === offreChoisie.nom));
+    const a = $('anniv');
+    if (cliente && anniversaireCeMois(cliente)) { a.classList.remove('cache'); a.textContent = '🎂 C\'est le mois d\'anniversaire de ' + cliente.nom + ' (' + cliente.anniversaire + ').'; }
+    else a.classList.add('cache');
+
     let aPayer = prix;
     if (offre && prix) {
       aPayer = (!prixManuel && choisis.length > 1) ? prix - Math.max(...choisis.map(x => x.prix)) / 2 : prix / 2;
+    } else if (offreChoisie && prix) {
+      aPayer = offreChoisie.type === '%' ? prix * (1 - offreChoisie.valeur / 100) : prix - offreChoisie.valeur;
+      aPayer = Math.max(Math.round(aPayer * 100) / 100, 0);
     }
-    $('encaisser').textContent = prix || choisis.length ? 'À encaisser : ' + euros(aPayer) : '';
+    $('encaisser').textContent = prix || choisis.length
+      ? 'À encaisser : ' + euros(aPayer) + (offreChoisie && !offre ? '  (' + offreChoisie.nom + ')' : '') : '';
+  }
+
+  /* ---------- Offres à la saisie ---------- */
+  let offreChoisie = null;
+  const texteOffre = o => '−' + o.valeur.toLocaleString('fr-FR') + ' ' + o.type;
+  function construireChoixOffres() {
+    const z = $('choixOffres'); z.innerHTML = '';
+    D.offres.filter(o => o.active).forEach(o => {
+      const b = el('button', 'presta', o.nom); b.dataset.nom = o.nom;
+      b.appendChild(el('b', '', texteOffre(o)));
+      b.onclick = () => { offreChoisie = offreChoisie && offreChoisie.nom === o.nom ? null : o; majResume(); };
+      z.appendChild(b);
+    });
+  }
+
+  function anniversaireCeMois(c) {
+    const m = String(c.anniversaire || '').match(/^\s*\d{1,2}\/(\d{1,2})/);
+    return !!m && Number(m[1]) === new Date().getMonth() + 1;
   }
 
   function enregistrer() {
@@ -357,24 +457,47 @@
     const p = {
       date: $('date').value, heure: $('heure').value, client: cliente.nom, items: choisis,
       prixManuel: prixManuel ? Number(String($('prix').value).replace(',', '.')) : null,
+      offre: !offreProchaine() && offreChoisie ? offreChoisie : null,
     };
     api('ajouter', { p }).then(j => {
       const r = j.resultat;
       $('btnEnregistrer').textContent = '✔ Enregistrer';
-      D = r.data; afficherClientes(); afficherBilan();
+      majTout(r.data);
       $('formulaire').classList.add('cache'); $('succes').classList.remove('cache');
       $('succesTitre').textContent = 'Enregistré pour ' + r.client;
-      $('succesDetail').textContent = r.offre ? '🎁 Passage fidélité : −50 % appliqué !' : (r.passage ? r.passage + 'e passage au total.' : '');
+      $('succesDetail').textContent = r.libelle === '-50 %' ? '🎁 Passage fidélité : −50 % appliqué !'
+        : r.libelle ? '🏷️ Offre appliquée : ' + r.libelle : (r.passage ? r.passage + 'e passage au total.' : '');
       $('succesMontant').textContent = typeof r.aEncaisser === 'number' ? 'À encaisser : ' + euros(r.aEncaisser) : '';
       window.scrollTo(0, 0);
     }).catch(e => { $('btnEnregistrer').textContent = '✔ Enregistrer'; erreur(e); });
   }
 
   /* ---------- Clientes ---------- */
+  let filtre = 'toutes';
+  const dateNum = s => { const m = String(s || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? new Date(+m[3], m[2] - 1, +m[1]).getTime() : 0; };
+  const prochesOffre = c => c.depuis % D.passagesPourOffre === D.passagesPourOffre - 1;
+  const absente = c => c.total > 0 && dateNum(c.derniere) && (Date.now() - dateNum(c.derniere)) > 60 * 864e5;
+
   function afficherClientes() {
     const q = norm($('rechercheClientes').value);
     const box = $('listeClientes'); box.innerHTML = '';
-    D.clientes.filter(c => !q || norm(c.nom).includes(q)).forEach(c => {
+    let liste = D.clientes.filter(c => !q || norm(c.nom).includes(q));
+    if (filtre === 'offre') liste = liste.filter(prochesOffre);
+    if (filtre === 'anniv') liste = liste.filter(anniversaireCeMois);
+    if (filtre === 'absente') liste = liste.filter(absente);
+    if (filtre === 'regulieres') liste = liste.filter(c => c.total >= 5);
+    const tri = $('tri').value;
+    const parNom = (a, b) => a.nom.localeCompare(b.nom, 'fr');
+    liste.sort({
+      nom: parNom,
+      recente: (a, b) => dateNum(b.derniere) - dateNum(a.derniere) || parNom(a, b),
+      passages: (a, b) => b.total - a.total || parNom(a, b),
+      ca: (a, b) => b.ca - a.ca || parNom(a, b),
+      offre: (a, b) => (b.depuis % D.passagesPourOffre) - (a.depuis % D.passagesPourOffre) || parNom(a, b),
+    }[tri]);
+    $('nbClientes').textContent = liste.length + ' cliente' + (liste.length > 1 ? 's' : '');
+    if (!liste.length) box.appendChild(el('p', '', 'Aucune cliente ne correspond.')).style.color = 'var(--gris)';
+    liste.forEach(c => {
       const k = el('div', 'carte');
       const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', c.nom));
       const n = c.depuis % D.passagesPourOffre;
@@ -383,6 +506,7 @@
       const infos = [c.total + ' passage' + (c.total > 1 ? 's' : '') + ' au total'];
       if (c.derniere) infos.push('dernière visite ' + c.derniere);
       if (c.anniversaire) infos.push('🎂 ' + c.anniversaire);
+      if (c.ca) infos.push(euros(c.ca));
       k.appendChild(el('div', 'ligne2', infos.join(' · ')));
       const pts = el('div', 'points');
       for (let i = 1; i <= D.passagesPourOffre; i++) pts.appendChild(el('i', i <= n ? 'plein' : (i === D.passagesPourOffre ? 'cadeau' : '')));
@@ -409,18 +533,69 @@
       const k = el('div', 'carte');
       const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', r.client));
       l1.appendChild(el('span', '', r.caApres !== null ? euros(r.caApres) : r.prix)); k.appendChild(l1);
-      k.appendChild(el('div', 'ligne2', r.date + (r.heure ? ' · ' + r.heure : '') + ' · ' + r.prestation + (r.offre ? ' · 🎁 −50 %' : '')));
+      k.appendChild(el('div', 'ligne2', r.date + (r.heure ? ' · ' + r.heure : '') + ' · ' + r.prestation + (r.libelle ? ' · ' + (r.libelle === '-50 %' ? '🎁 −50 %' : '🏷️ ' + r.libelle) : '')));
       if (i === 0 && r.row === D.derniereLigne) {
         const b = el('button', 'lien', '↩ Annuler cette saisie');
         b.onclick = () => {
           if (!confirm('Supprimer la saisie de ' + r.client + ' du ' + r.date + ' ?')) return;
-          api('annuler', { row: r.row }).then(j => { D = j.data; afficherClientes(); afficherBilan(); filtrerClientes(); message('Saisie annulée.'); })
+          api('annuler', { row: r.row }).then(j => { majTout(j.data); filtrerClientes(); message('Saisie annulée.'); })
             .catch(erreur);
         };
         k.appendChild(b);
       }
       box.appendChild(k);
     });
+  }
+
+  /* ---------- Offres ---------- */
+  let typeOffre = '%';
+  function choisirType(t) { typeOffre = t; $('typePct').classList.toggle('on', t === '%'); $('typeEur').classList.toggle('on', t === '€'); }
+
+  function sauverOffres(liste, msg) {
+    api('offres', { offres: liste }).then(j => { majTout(j.data); message(msg); }).catch(erreur);
+  }
+
+  function creerOffre() {
+    const nom = $('offreNom').value.trim();
+    const valeur = Number(String($('offreValeur').value).replace(',', '.'));
+    if (!nom) return message('👉 Donne un nom à l\'offre.');
+    if (!(valeur > 0)) return message('👉 Indique le montant de la réduction.');
+    if (typeOffre === '%' && valeur > 100) return message('👉 Le pourcentage ne peut pas dépasser 100.');
+    if (D.offres.some(o => norm(o.nom) === norm(nom))) return message('👉 Une offre porte déjà ce nom.');
+    const liste = D.offres.concat([{ nom, type: typeOffre, valeur, active: true }]);
+    $('offreNom').value = ''; $('offreValeur').value = '';
+    sauverOffres(liste, '✅ Offre « ' + nom + ' » créée.');
+  }
+
+  function afficherOffres() {
+    const box = $('listeOffres'); box.innerHTML = '';
+    if (!D.offres.length) box.appendChild(el('p', '', 'Aucune offre pour l\'instant.')).style.color = 'var(--gris)';
+    D.offres.forEach((o, i) => {
+      const k = el('div', 'carte' + (o.active ? '' : ' inactive'));
+      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', '🏷️ ' + o.nom)); l1.appendChild(el('span', '', texteOffre(o)));
+      k.appendChild(l1);
+      k.appendChild(el('div', 'ligne2', o.active ? 'Active : proposée à la saisie' : 'En pause : non proposée'));
+      const act = el('div', 'actions');
+      const bP = el('button', 'lien', o.active ? '⏸ Mettre en pause' : '▶ Réactiver');
+      bP.onclick = () => sauverOffres(D.offres.map((x, j) => j === i ? Object.assign({}, x, { active: !x.active }) : x),
+        o.active ? 'Offre mise en pause.' : 'Offre réactivée.');
+      const bS = el('button', 'lien', '🗑 Supprimer');
+      bS.onclick = () => { if (confirm('Supprimer l\'offre « ' + o.nom + ' » ?')) sauverOffres(D.offres.filter((x, j) => j !== i), 'Offre supprimée.'); };
+      act.appendChild(bP); act.appendChild(bS); k.appendChild(act);
+      box.appendChild(k);
+    });
+
+    const sv = $('surveiller'); sv.innerHTML = '';
+    const proches = D.clientes.filter(prochesOffre);
+    const annivs = D.clientes.filter(anniversaireCeMois);
+    const bloc = (titre, liste, detail) => {
+      const k = el('div', 'carte');
+      k.appendChild(el('div', 'ligne1', titre + ' (' + liste.length + ')'));
+      k.appendChild(el('div', 'ligne2', liste.length ? liste.map(detail).join(' · ') : 'Personne pour l\'instant.'));
+      sv.appendChild(k);
+    };
+    bloc('🎁 −50 % à leur prochaine visite', proches, c => c.nom);
+    bloc('🎂 Anniversaire ce mois-ci', annivs, c => c.nom + ' (' + c.anniversaire + ')');
   }
 
   charger();
