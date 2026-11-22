@@ -3,91 +3,18 @@
 <head>
 <meta charset="utf-8">
 <title>Suivi Ongles</title>
-<meta name="theme-color" content="#d6336c">
+<meta name="theme-color" content="#5b2a4e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Suivi Ongles">
 <link rel="manifest" href="manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<style>
-  :root {
-    --rose: #d6336c; --rose-clair: #fde8ef; --vert: #2b8a3e; --vert-clair: #e6f6ea;
-    --gris: #6b6b6b; --fond: #faf7f8; --carte: #ffffff; --bord: #ead9df; --texte: #222;
-  }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--fond);
-         color: var(--texte); font-size: 18px; padding-bottom: 90px; }
-  header { background: var(--rose); color: #fff; padding: 14px 16px; font-size: 22px; font-weight: 700; }
-  main { padding: 12px 16px; max-width: 640px; margin: 0 auto; }
-  h2 { font-size: 20px; margin: 22px 0 10px; }
-  .etape { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--rose); color: #fff;
-           align-items: center; justify-content: center; font-size: 16px; margin-right: 8px; }
-  input[type=text], input[type=number], input[type=date], input[type=time] {
-    width: 100%; font-size: 20px; padding: 14px; border: 2px solid var(--bord); border-radius: 12px; background: #fff; }
-  input:focus { outline: none; border-color: var(--rose); }
-  .liste { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-  .choix { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px; border-radius: 12px;
-           border: 2px solid var(--bord); background: var(--carte); font-size: 18px; cursor: pointer; text-align: left; width: 100%; }
-  .choix small { color: var(--gris); font-size: 14px; }
-  .choix.nouvelle { border-style: dashed; color: var(--rose); font-weight: 600; }
-  .selection { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 12px;
-               background: var(--rose-clair); border: 2px solid var(--rose); font-size: 20px; font-weight: 700; }
-  .lien { background: none; border: none; color: var(--rose); font-size: 16px; text-decoration: underline; cursor: pointer; padding: 6px; }
-  .grille { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .presta { padding: 14px 10px; border-radius: 12px; border: 2px solid var(--bord); background: #fff; font-size: 16px;
-            cursor: pointer; min-height: 64px; }
-  .presta b { display: block; font-size: 15px; color: var(--gris); margin-top: 4px; font-weight: 500; }
-  .presta.on { background: var(--rose); border-color: var(--rose); color: #fff; }
-  .presta.on b { color: #fff; }
-  .options .presta { min-height: 50px; background: #fff8fb; }
-  .fidelite { padding: 14px; border-radius: 12px; font-size: 18px; margin-top: 14px; }
-  .fidelite.offre { background: var(--vert-clair); border: 2px solid var(--vert); color: var(--vert); font-weight: 700; }
-  .fidelite.info { background: #f3f0f1; color: #444; }
-  .total { display: flex; align-items: center; gap: 10px; }
-  .total input { max-width: 160px; font-weight: 700; }
-  .encaisser { font-size: 26px; font-weight: 800; margin-top: 10px; }
-  .gros { width: 100%; padding: 20px; font-size: 22px; font-weight: 700; border: none; border-radius: 14px; background: var(--rose);
-          color: #fff; margin-top: 22px; cursor: pointer; }
-  .gros:disabled { background: #c9a9b6; }
-  .gros.secondaire { background: #fff; color: var(--rose); border: 2px solid var(--rose); }
-  .quand { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
-  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #fff; border-top: 1px solid var(--bord);
-        padding-bottom: env(safe-area-inset-bottom); }
-  nav button { flex: 1; padding: 12px 4px 14px; border: none; background: none; font-size: 15px; color: var(--gris); cursor: pointer; }
-  nav button span { display: block; font-size: 26px; }
-  nav button.actif { color: var(--rose); font-weight: 700; }
-  .carte { background: var(--carte); border: 1px solid var(--bord); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
-  .carte .ligne1 { display: flex; justify-content: space-between; font-weight: 700; }
-  .carte .ligne2 { color: var(--gris); font-size: 15px; margin-top: 4px; }
-  .badge { display: inline-block; background: var(--vert); color: #fff; border-radius: 8px; padding: 2px 8px; font-size: 14px; }
-  .points { display: flex; gap: 6px; margin-top: 8px; }
-  .points i { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--rose); }
-  .points i.plein { background: var(--rose); }
-  .points i.cadeau { border-color: var(--vert); }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat { background: #fff; border: 1px solid var(--bord); border-radius: 12px; padding: 14px; }
-  .stat b { display: block; font-size: 26px; color: var(--rose); }
-  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; }
-  td, th { padding: 10px; border-bottom: 1px solid var(--bord); text-align: left; font-size: 16px; }
-  td.n, th.n { text-align: right; }
-  .msg { position: fixed; left: 16px; right: 16px; bottom: 100px; background: #222; color: #fff; padding: 16px; border-radius: 12px;
-         font-size: 17px; display: none; z-index: 10; }
-  .chargement { text-align: center; color: var(--gris); padding: 60px 0; }
-  .succes { text-align: center; padding: 30px 10px; }
-  .succes .icone { font-size: 64px; }
-  .cache { display: none !important; }
-  .filtres { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px; -webkit-overflow-scrolling: touch; }
-  .puce { flex: 0 0 auto; padding: 10px 14px; border-radius: 999px; border: 2px solid var(--bord); background: #fff;
-          font-size: 15px; cursor: pointer; white-space: nowrap; color: var(--texte); }
-  .puce.on { background: var(--rose); border-color: var(--rose); color: #fff; }
-  .trier { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 16px; }
-  .trier select { flex: 1; font-size: 16px; padding: 10px; border: 2px solid var(--bord); border-radius: 10px; background: #fff; }
-  .bascule { display: flex; gap: 6px; }
-  .actions { display: flex; gap: 14px; margin-top: 8px; }
-  .inactive { opacity: .55; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
-<header>💅 Suivi des prestations</header>
+<header><div class="titre">💅 Suivi des prestations</div><div class="sous" id="sousTitre"></div></header>
 <main>
   <div id="chargement" class="chargement">Chargement…</div>
 
@@ -204,6 +131,33 @@
     <div id="surveiller"></div>
   </section>
 
+  <!-- ============ ACHATS ============ -->
+  <section id="v-achats" class="cache">
+    <h2>🧾 Nouvel achat</h2>
+    <p style="color:var(--gris);font-size:15px;margin-top:-4px">Montants TTC (ce que tu as payé, TVA comprise).</p>
+    <div class="carte">
+      <label class="etiquette" for="achatLibelle">C'est quoi ?</label>
+      <input type="text" id="achatLibelle" placeholder="ex. Gel couleur rose, lampe UV…" maxlength="120">
+      <label class="etiquette">Catégorie</label>
+      <div id="achatCategories" class="grille options"></div>
+      <div class="quand" style="margin-top:12px">
+        <div><label class="etiquette" for="achatPrix">Prix TTC (à l'unité)</label>
+          <input type="number" id="achatPrix" inputmode="decimal" placeholder="0,00" oninput="majTotalAchat()"></div>
+        <div><label class="etiquette" for="achatQte">Quantité</label>
+          <input type="number" id="achatQte" inputmode="numeric" value="1" min="1" oninput="majTotalAchat()"></div>
+      </div>
+      <label class="etiquette" for="achatDate">Date</label>
+      <input type="date" id="achatDate">
+      <div id="achatTotal" class="encaisser"></div>
+      <button class="gros" id="btnAchat" onclick="enregistrerAchat()">✔ Enregistrer l'achat</button>
+    </div>
+    <h2>Achats de l'année</h2>
+    <div class="trier"><label for="achatFiltre">Voir :</label>
+      <select id="achatFiltre" onchange="afficherAchats()"></select></div>
+    <p id="achatsResume" style="color:var(--gris);font-size:15px"></p>
+    <div id="listeAchats"></div>
+  </section>
+
   <!-- ============ BILAN ============ -->
   <section id="v-bilan" class="cache">
     <h2>Aujourd'hui</h2>
@@ -211,8 +165,16 @@
       <div class="stat">Prestations<b id="jourNb">0</b></div>
       <div class="stat">Encaissé<b id="jourCa">0 €</b></div>
     </div>
+    <h2 id="titreBilanAnnee">Bilan de l'année</h2>
+    <div class="stats">
+      <div class="stat vedette">Encaissé (TTC)<b id="anCa">0 €</b></div>
+      <div class="stat">Dépensé (TTC)<b id="anAchats">0 €</b></div>
+    </div>
+    <div class="stat vedette" style="margin-top:10px">Il reste (encaissé − dépensé)<b id="anReste">0 €</b></div>
+    <h2>Dépenses par catégorie</h2>
+    <div id="categories" class="carte"></div>
     <h2 id="titreAnnee">Par mois</h2>
-    <table><thead><tr><th>Mois</th><th class="n">Prestations</th><th class="n">CA</th></tr></thead><tbody id="tableMois"></tbody></table>
+    <table><thead><tr><th>Mois</th><th class="n">Encaissé</th><th class="n">Dépensé</th><th class="n">Reste</th></tr></thead><tbody id="tableMois"></tbody></table>
     <h2>Dernières saisies</h2>
     <div id="recentes"></div>
   </section>
@@ -222,6 +184,7 @@
   <button id="t-nouvelle" onclick="vue('nouvelle')"><span>➕</span>Nouvelle</button>
   <button id="t-clientes" onclick="vue('clientes')"><span>👩</span>Clientes</button>
   <button id="t-offres" onclick="vue('offres')"><span>🏷️</span>Offres</button>
+  <button id="t-achats" onclick="vue('achats')"><span>🧾</span>Achats</button>
   <button id="t-bilan" onclick="vue('bilan')"><span>📊</span>Bilan</button>
 </nav>
 <div id="msg" class="msg"></div>
@@ -283,12 +246,14 @@
   }
 
   function init() {
+    $('sousTitre').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     document.querySelectorAll('.debutOffre').forEach(s => s.textContent = D.debutOffre);
     construirePrestations();
     nouvelleSaisie();
     afficherClientes();
     afficherBilan();
     afficherOffres();
+    initAchats();
     document.querySelectorAll('#filtres .puce').forEach(b => b.onclick = () => {
       filtre = b.dataset.f;
       document.querySelectorAll('#filtres .puce').forEach(x => x.classList.toggle('on', x === b));
@@ -298,10 +263,10 @@
   }
 
   /** Rafraîchit tous les écrans après une réponse du serveur. */
-  function majTout(d) { D = d; afficherClientes(); afficherBilan(); afficherOffres(); construireChoixOffres(); }
+  function majTout(d) { D = d; afficherClientes(); afficherBilan(); afficherOffres(); construireChoixOffres(); afficherAchats(); }
 
   function vue(v) {
-    ['nouvelle', 'clientes', 'offres', 'bilan'].forEach(x => {
+    ['nouvelle', 'clientes', 'offres', 'achats', 'bilan'].forEach(x => {
       $('v-' + x).classList.toggle('cache', x !== v);
       $('t-' + x).classList.toggle('actif', x === v);
     });
@@ -518,15 +483,36 @@
   /* ---------- Bilan ---------- */
   function afficherBilan() {
     $('jourNb').textContent = D.jour.nb; $('jourCa').textContent = euros(D.jour.ca);
-    $('titreAnnee').textContent = 'Par mois (' + D.annee + ')';
+    $('titreAnnee').textContent = 'Mois par mois (' + D.annee + ')';
+    $('titreBilanAnnee').textContent = 'Bilan ' + D.annee;
     const tb = $('tableMois'); tb.innerHTML = '';
-    let tn = 0, tc = 0;
+    let tc = 0, ta = 0;
+    const cellule = (v, cls) => { const td = el('td', 'n' + (cls ? ' ' + cls : ''), euros(v)); return td; };
     D.mois.forEach((m, i) => {
-      if (!m.nb) return; tn += m.nb; tc += m.ca;
-      const tr = el('tr'); tr.appendChild(el('td', '', MOIS[i])); tr.appendChild(el('td', 'n', m.nb)); tr.appendChild(el('td', 'n', euros(m.ca))); tb.appendChild(tr);
+      const dep = D.achatsMois[i] || 0;
+      if (!m.nb && !dep) return; tc += m.ca; ta += dep;
+      const tr = el('tr'); tr.appendChild(el('td', '', MOIS[i]));
+      tr.appendChild(cellule(m.ca)); tr.appendChild(cellule(dep)); tr.appendChild(cellule(m.ca - dep, m.ca - dep < 0 ? 'negatif' : ''));
+      tb.appendChild(tr);
     });
-    const tr = el('tr'); tr.style.fontWeight = '700';
-    tr.appendChild(el('td', '', 'Total')); tr.appendChild(el('td', 'n', tn)); tr.appendChild(el('td', 'n', euros(tc))); tb.appendChild(tr);
+    const tr = el('tr'); tr.className = 'total-ligne';
+    tr.appendChild(el('td', '', 'Total')); tr.appendChild(cellule(tc)); tr.appendChild(cellule(ta)); tr.appendChild(cellule(tc - ta, tc - ta < 0 ? 'negatif' : ''));
+    tb.appendChild(tr);
+    $('anCa').textContent = euros(tc); $('anAchats').textContent = euros(ta); $('anReste').textContent = euros(tc - ta);
+    $('anReste').classList.toggle('negatif', tc - ta < 0);
+
+    const cz = $('categories'); cz.innerHTML = '';
+    const cats = Object.keys(D.parCategorie).sort((a, b) => D.parCategorie[b] - D.parCategorie[a]);
+    const max = cats.length ? D.parCategorie[cats[0]] : 0;
+    if (!cats.length) cz.appendChild(el('div', 'ligne2', 'Aucun achat enregistré cette année. Ajoute-les dans l\'onglet 🧾 Achats.'));
+    cats.forEach(c => {
+      const v = D.parCategorie[c];
+      const k = el('div', 'cat');
+      const l = el('div', 'ligne1'); l.appendChild(el('span', '', c)); l.appendChild(el('span', '', euros(v) + ' · ' + Math.round(v / ta * 100) + ' %'));
+      k.appendChild(l);
+      const b = el('div', 'barre'); b.style.width = Math.max(4, v / max * 100) + '%'; k.appendChild(b);
+      cz.appendChild(k);
+    });
 
     const box = $('recentes'); box.innerHTML = '';
     D.recentes.forEach((r, i) => {
@@ -543,6 +529,76 @@
         };
         k.appendChild(b);
       }
+      box.appendChild(k);
+    });
+  }
+
+  /* ---------- Achats ---------- */
+  let categorieAchat = null;
+  const ICONES_CAT = { 'Produits & consommables': '💅', 'Matériel & équipement': '🔌', 'Hygiène & désinfection': '🧴', 'Formation': '🎓',
+    'Publicité & communication': '📣', 'Local & loyer': '🏠', 'Déplacements': '🚗', 'Assurance & banque': '🏦', 'URSSAF & cotisations': '🏛️', 'Autre': '📦' };
+  const iconeCat = c => (ICONES_CAT[c] || '📦');
+
+  function initAchats() {
+    const z = $('achatCategories'); z.innerHTML = '';
+    D.categoriesAchats.forEach(c => {
+      const b = el('button', 'presta', iconeCat(c) + ' ' + c); b.dataset.cat = c;
+      b.onclick = () => { categorieAchat = c; document.querySelectorAll('#achatCategories .presta').forEach(x => x.classList.toggle('on', x === b)); };
+      z.appendChild(b);
+    });
+    const f = $('achatFiltre'); f.innerHTML = '';
+    f.appendChild(new Option('Toutes les catégories', ''));
+    D.categoriesAchats.forEach(c => f.appendChild(new Option(iconeCat(c) + ' ' + c, c)));
+    resetAchat();
+    afficherAchats();
+  }
+
+  function resetAchat() {
+    $('achatLibelle').value = ''; $('achatPrix').value = ''; $('achatQte').value = 1;
+    const d = new Date(), p = n => String(n).padStart(2, '0');
+    $('achatDate').value = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    categorieAchat = null; document.querySelectorAll('#achatCategories .presta').forEach(x => x.classList.remove('on'));
+    majTotalAchat();
+  }
+
+  function majTotalAchat() {
+    const pu = Number(String($('achatPrix').value).replace(',', '.')) || 0;
+    const q = Number($('achatQte').value) || 1;
+    $('achatTotal').textContent = pu ? 'Total : ' + euros(pu * q) + (q > 1 ? '  (' + q + ' × ' + euros(pu) + ')' : '') : '';
+  }
+
+  function enregistrerAchat() {
+    const libelle = $('achatLibelle').value.trim();
+    const pu = Number(String($('achatPrix').value).replace(',', '.'));
+    const q = Number($('achatQte').value) || 1;
+    if (!libelle) return message('👉 Indique ce que tu as acheté.');
+    if (!categorieAchat) return message('👉 Choisis une catégorie.');
+    if (!(pu > 0)) return message('👉 Indique le prix TTC.');
+    $('btnAchat').disabled = true; $('btnAchat').textContent = 'Enregistrement…';
+    api('achat_ajouter', { a: { date: $('achatDate').value, libelle, categorie: categorieAchat, prixUnitaire: pu, quantite: q } })
+      .then(j => { majTout(j.data); resetAchat(); message('✅ Achat enregistré : ' + libelle + ' (' + euros(pu * q) + ')'); })
+      .catch(erreur)
+      .finally(() => { $('btnAchat').disabled = false; $('btnAchat').textContent = '✔ Enregistrer l\'achat'; });
+  }
+
+  function afficherAchats() {
+    const f = $('achatFiltre').value;
+    const liste = D.achats.filter(a => !f || a.categorie === f);
+    const total = liste.reduce((s, a) => s + a.total, 0);
+    $('achatsResume').textContent = liste.length + ' achat' + (liste.length > 1 ? 's' : '') + ' · ' + euros(total) + ' TTC';
+    const box = $('listeAchats'); box.innerHTML = '';
+    if (!liste.length) box.appendChild(el('p', '', 'Aucun achat pour l\'instant.')).style.color = 'var(--gris)';
+    liste.forEach(a => {
+      const k = el('div', 'carte');
+      const l1 = el('div', 'ligne1'); l1.appendChild(el('span', '', iconeCat(a.categorie) + ' ' + a.libelle)); l1.appendChild(el('span', '', euros(a.total)));
+      k.appendChild(l1);
+      k.appendChild(el('div', 'ligne2', a.date + ' · ' + a.categorie + (a.q > 1 ? ' · ' + a.q + ' × ' + euros(a.pu) : '')));
+      const b = el('button', 'lien', '🗑 Supprimer');
+      b.onclick = () => {
+        if (!confirm('Supprimer l\'achat « ' + a.libelle + ' » (' + euros(a.total) + ') ?')) return;
+        api('achat_supprimer', { row: a.row }).then(j => { majTout(j.data); message('Achat supprimé.'); }).catch(erreur);
+      };
+      k.appendChild(b);
       box.appendChild(k);
     });
   }
